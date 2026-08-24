@@ -1,0 +1,47 @@
+<main class="pokemon-list">
+  <section
+    class="container pokemon-list__content"
+    aria-labelledby="pokemon-list-title"
+  >
+    <h1 id="pokemon-list-title" class="pokemon-list__title">Pokémon</h1>
+
+    <div class="pokemon-list__grid">
+      {{#each pokemons}}
+        <article class="pokemon-card">
+
+          <a class="pokemon-card__link" href="/pokemons/{{id}}">
+
+            <div class="pokemon-card__image-container">
+              {{#if image}}
+                <img
+                  class="pokemon-card__image"
+                  src="{{image}}"
+                  alt="{{name}} image"
+                />
+              {{/if}}
+            </div>
+
+            <div class="pokemon-card__content">
+              <span class="pokemon-card__id">
+                #{{id}}
+              </span>
+
+              <h2 class="pokemon-card__name">
+                {{name}}
+              </h2>
+
+              <ul class="pokemon-card__types">
+                {{#each types}}
+                  <li class="pokemon-card__type">
+                    {{this}}
+                  </li>
+                {{/each}}
+              </ul>
+            </div>
+          </a>
+
+        </article>
+      {{/each}}
+    </div>
+  </section>
+</main>
