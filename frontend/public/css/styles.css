@@ -7,12 +7,22 @@
 }
 
 html {
-  font-family: system-ui, sans-serif;
+  font-family: "Nunito", system-ui, sans-serif;
 }
 
 body {
-  height: 100vh;
+  min-height: 100vh;
+  min-height: 100dvh;
+
+  display: flex;
+  flex-direction: column;
+
   margin: 0;
+  background-color: whitesmoke;
+}
+
+main {
+  flex: 1;
 }
 
 img {
@@ -261,6 +271,13 @@ a {
 }
 
 .site-footer__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  flex-wrap: wrap;
+
+  gap: 1rem;
+
   padding-block: 1.5rem;
 }
 
@@ -269,4 +286,33 @@ a {
 
   text-align: center;
   font-size: 0.875rem;
+}
+
+.site-footer__github {
+  display: grid;
+  place-items: center;
+
+  width: 2.75rem;
+  aspect-ratio: 1;
+
+  border-radius: 50%;
+
+  transition: all 0.1s;
+}
+
+.site-footer__github-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+
+  fill: currentColor;
+}
+
+.site-footer__github:hover {
+  opacity: 0.7;
+  transform: translateY(-0.25rem);
+}
+
+.site-footer__github:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
 }

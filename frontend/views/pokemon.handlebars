@@ -3,101 +3,105 @@
 
     <article class="pokemon-details__content">
 
-      <div class="pokemon-details__image-container">
-        {{#if pokemon.image}}
-          <img
-            class="pokemon-details__image"
-            src="{{pokemon.image}}"
-            alt="{{pokemon.name}} image"
-          />
-        {{/if}}
+      {{#with pokemon}}
 
-      </div>
+        <div class="pokemon-details__image-container">
+          {{#if image}}
+            <img
+              class="pokemon-details__image"
+              src="{{image}}"
+              alt="{{name}} image"
+            />
+          {{/if}}
 
-      <div class="pokemon-details__info">
-        <span class="pokemon-details__id">
-          #{{pokemon.id}}
-        </span>
-
-        <h1 class="pokemon-details__name">
-          {{pokemon.name}}
-        </h1>
-
-        <p class="pokemon-details__description">
-          {{pokemon.description}}
-        </p>
-
-        <div class="pokemon-details__measurements">
-          <p class="pokemon-details__measurement">
-            Height:
-            <strong>{{pokemon.height}}</strong>
-          </p>
-
-          <p class="pokemon-details__measurement">
-            Weight:
-            <strong>{{pokemon.weight}}</strong>
-          </p>
         </div>
 
-        <section
-          class="pokemon-details__section"
-          aria-labelledby="pokemon-types-title"
-        >
-          <h2 id="pokemon-types-title" class="pokemon-details__subtitle">
-            Types
-          </h2>
+        <div class="pokemon-details__info">
+          <span class="pokemon-details__id">
+            #{{id}}
+          </span>
 
-          <ul class="pokemon-details__types">
-            {{#each pokemon.types}}
-              <li class="pokemon-details__type">
-                {{this}}
-              </li>
-            {{/each}}
-          </ul>
-        </section>
+          <h1 class="pokemon-details__name">
+            {{name}}
+          </h1>
 
-        <section
-          class="pokemon-details__section"
-          aria-labelledby="pokemon-abilities-title"
-        >
-          <h2 id="pokemon-abilities-title" class="pokemon-details__subtitle">
-            Abilities
-          </h2>
+          <p class="pokemon-details__description">
+            {{description}}
+          </p>
 
-          <ul class="pokemon-details__abilities">
-            {{#each pokemon.abilities}}
-              <li class="pokemon-details__ability">
-                {{this}}
-              </li>
-            {{/each}}
-          </ul>
-        </section>
+          <div class="pokemon-details__measurements">
+            <p class="pokemon-details__measurement">
+              Height:
+              <strong>{{height}}</strong>
+            </p>
 
-        <section
-          class="pokemon-details__section"
-          aria-labelledby="pokemon-stats-title"
-        >
-          <h2 id="pokemon-stats-title" class="pokemon-details__subtitle">
-            Stats
-          </h2>
+            <p class="pokemon-details__measurement">
+              Weight:
+              <strong>{{weight}}</strong>
+            </p>
+          </div>
 
-          <dl class="pokemon-details__stats">
-            {{#each pokemon.stats}}
-              <div class="pokemon-details__stat">
-                <dt class="pokemon-details__stat-name">
-                  {{@key}}
-                </dt>
+          <section
+            class="pokemon-details__section"
+            aria-labelledby="pokemon-types-title"
+          >
+            <h2 id="pokemon-types-title" class="pokemon-details__subtitle">
+              Types
+            </h2>
 
-                <dd class="pokemon-details__stat-value">
+            <ul class="pokemon-details__types">
+              {{#each types}}
+                <li class="pokemon-details__type">
                   {{this}}
-                </dd>
-              </div>
-            {{/each}}
-          </dl>
+                </li>
+              {{/each}}
+            </ul>
+          </section>
 
-        </section>
+          <section
+            class="pokemon-details__section"
+            aria-labelledby="pokemon-abilities-title"
+          >
+            <h2 id="pokemon-abilities-title" class="pokemon-details__subtitle">
+              Abilities
+            </h2>
 
-      </div>
+            <ul class="pokemon-details__abilities">
+              {{#each abilities}}
+                <li class="pokemon-details__ability">
+                  {{this}}
+                </li>
+              {{/each}}
+            </ul>
+          </section>
+
+          <section
+            class="pokemon-details__section"
+            aria-labelledby="pokemon-stats-title"
+          >
+            <h2 id="pokemon-stats-title" class="pokemon-details__subtitle">
+              Stats
+            </h2>
+
+            <dl class="pokemon-details__stats">
+              {{#each stats}}
+                <div class="pokemon-details__stat">
+                  <dt class="pokemon-details__stat-name">
+                    {{@key}}
+                  </dt>
+
+                  <dd class="pokemon-details__stat-value">
+                    {{this}}
+                  </dd>
+                </div>
+              {{/each}}
+            </dl>
+
+          </section>
+
+        </div>
+
+      {{/with}}
 
     </article>
 
