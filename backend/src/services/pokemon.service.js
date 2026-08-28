@@ -1,4 +1,5 @@
 import pokeApi from "../clients/pokeapi.client.js";
+import pokemonCache from "../cache/pokemon.cache.js";
 import {
   mapPokemonDetails,
   mapPokemonCard,
@@ -15,31 +16,53 @@ import {
 } from "../schemas/pokemon.schema.js";
 
 const maximumPokemonId = 500;
+let requestSequence = 0;
 const pokemonFetchBatchSize = 20;
+const pokemonListCacheKey = "pokemons:all";
 
 export default class PokemonService {
   async getPokemons() {
-    const response = await pokeApi(`pokemon?limit=${maximumPokemonId}`);
+    const timerLabel = `getPokemons:${++requestSequence}`;
 
-    const { results } = this.#validate(pokemonResultSchema, response);
+    console.time(timerLabel);
 
-    const cards = [];
+    try {
+      const cachedPokemons = pokemonCache.get(pokemonListCacheKey);
 
-    for (
-      let index = 0;
-      index < results.length;
-      index += pokemonFetchBatchSize
-    ) {
-      const batch = results.slice(index, index + pokemonFetchBatchSize);
+      if (cachedPokemons !== undefined) {
+        console.log("cache HIT");
 
-      const batchCards = await Promise.all(
-        batch.map(({ url }) => this.#getPokemonCard(url)),
-      );
+        return cachedPokemons;
+      }
 
-      cards.push(...batchCards);
+      console.log("cache MISS");
+
+      const response = await pokeApi(`pokemon?limit=${maximumPokemonId}`);
+
+      const { results } = this.#validate(pokemonResultSchema, response);
+
+      const cards = [];
+
+      for (
+        let index = 0;
+        index < results.length;
+        index += pokemonFetchBatchSize
+      ) {
+        const batch = results.slice(index, index + pokemonFetchBatchSize);
+
+        const batchCards = await Promise.all(
+          batch.map(({ url }) => this.#getPokemonCard(url)),
+        );
+
+        cards.push(...batchCards);
+      }
+
+      pokemonCache.set(pokemonListCacheKey, cards);
+
+      return cards;
+    } finally {
+      console.timeEnd(timerLabel);
     }
-
-    return cards;
   }
 
   async getPokemonById(id) {

@@ -13,6 +13,7 @@
   "dependencies": {
     "express": "^5.2.1",
     "express-handlebars": "^9.0.1",
+    "node-cache": "^5.1.2",
     "zod": "^4.4.3"
   },
   "type": "module"
