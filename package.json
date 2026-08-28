@@ -1,9 +1,13 @@
 {
   "devDependencies": {
+    "concurrently": "^10.0.5",
     "supertest": "^7.2.2",
     "vitest": "^4.1.10"
   },
   "scripts": {
+    "dev:backend": "cd backend && node --watch server.js",
+    "dev:frontend": "cd frontend && node --watch server.js",
+    "dev": "concurrently -k -n BACKEND,FRONTEND \"npm:dev:backend\" \"npm:dev:frontend\"",
     "test": "vitest",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
@@ -16,5 +20,6 @@
     "node-cache": "^5.1.2",
     "zod": "^4.4.3"
   },
-  "type": "module"
+  "type": "module",
+  "private": true
 }
