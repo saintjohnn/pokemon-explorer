@@ -5,6 +5,7 @@ import makePokemonCard from "../factories/pokemon-card.factory.js";
 import makePokemonDetails from "../factories/pokemon-details.factory.js";
 import makePokemonResults from "../factories/pokemon-results.factory.js";
 import makePokemonSpecies from "../factories/pokemon-species.factory.js";
+import pokemonCache from "../../backend/src/cache/pokemon.cache";
 
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -21,6 +22,7 @@ describe("Pokemon API end-to-end behavior", () => {
   beforeEach(() => {
     fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
+    pokemonCache.flushAll();
   });
 
   afterEach(() => {

@@ -2,9 +2,27 @@ import pokeApi from "../../../backend/src/clients/pokeapi.client.js";
 import PokeApiError from "../../../backend/src/errors/poke-api.error.js";
 import makePokemon from "../../factories/pokemon.factory.js";
 
+function jsonResponse(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+}
+
 describe("pokeApi", () => {
+  let fetchMock;
+
+  beforeEach(() => {
+    fetchMock = vi.fn();
+
+    vi.stubGlobal("fetch", fetchMock);
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it("should request a relative PokeAPI path", async () => {
@@ -147,5 +165,24 @@ describe("pokeApi", () => {
 
     //Assert
     expect(promise).rejects.toBe(error);
+  });
+
+  it("should share the same request for concurrent calls", async () => {
+    // Arrange
+    const response = jsonResponse({
+      id: 1,
+      name: "bulbasaur",
+    });
+
+    fetchMock.mockResolvedValue(response);
+
+    // Act
+    const promises = Array.from({ length: 100 }, () => pokeApi("pokemon/1"));
+
+    const results = await Promise.all(promises);
+
+    // Assert
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(results).toHaveLength(100);
   });
 });

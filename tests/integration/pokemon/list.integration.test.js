@@ -4,6 +4,7 @@ import pokeApi from "../../../backend/src/clients/pokeapi.client.js";
 import PokeApiError from "../../../backend/src/errors/poke-api.error.js";
 import makePokemon from "../../factories/pokemon.factory.js";
 import makePokemonCard from "../../factories/pokemon-card.factory.js";
+import pokemonCache from "../../../backend/src/cache/pokemon.cache";
 
 vi.mock("../../../backend/src/clients/pokeapi.client.js", () => ({
   default: vi.fn(),
@@ -16,6 +17,7 @@ const ivysaurUrl = "https://pokeapi.co/api/v2/pokemon/2/";
 describe("GET /pokemons", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    pokemonCache.flushAll();
   });
 
   afterEach(() => {

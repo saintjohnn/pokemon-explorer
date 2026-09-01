@@ -6,6 +6,7 @@ import makePokemon from "../../factories/pokemon.factory.js";
 import makePokemonCard from "../../factories/pokemon-card.factory.js";
 import makePokemonSpecies from "../../factories/pokemon-species.factory.js";
 import makePokemonDetails from "../../factories/pokemon-details.factory";
+import pokemonCache from "../../../backend/src/cache/pokemon.cache";
 
 vi.mock("../../../backend/src/clients/pokeapi.client.js", () => ({
   default: vi.fn(),
@@ -19,6 +20,7 @@ describe("PokemonService", () => {
 
   beforeEach(() => {
     vi.resetAllMocks();
+    pokemonCache.flushAll();
   });
 
   describe("getPokemons", () => {
@@ -78,8 +80,12 @@ describe("PokemonService", () => {
       // Arrange
       pokeApi.mockResolvedValueOnce({ results: "invalid" });
 
+      console.log(pokemonCache.get("pokemons:all"), "HERE");
+
       // Act
       const error = await pokemonService.getPokemons().catch((error) => error);
+
+      console.log("HERE", error);
 
       // Assert
       expect(error).toBeInstanceOf(ValidationError);
