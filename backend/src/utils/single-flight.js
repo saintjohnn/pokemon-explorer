@@ -1,19 +1,17 @@
 const inFlightRequests = new Map();
 
 export function singleFlight(key, request) {
-  const url = key.toString();
-
-  const existingRequest = inFlightRequests.get(url);
+  const existingRequest = inFlightRequests.get(key);
 
   if (existingRequest) {
     return existingRequest;
   }
 
   const promise = request().finally(() => {
-    inFlightRequests.delete(url);
+    inFlightRequests.delete(key);
   });
 
-  inFlightRequests.set(url, promise);
+  inFlightRequests.set(key, promise);
 
   return promise;
 }

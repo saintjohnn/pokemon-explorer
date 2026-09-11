@@ -15,6 +15,8 @@ import {
   pokemonSpeciesResponseSchema,
 } from "../schemas/pokemon.schema.js";
 
+import { singleFlight } from "../utils/single-flight.js";
+
 const maximumPokemonId = 500;
 let requestSequence = 0;
 const pokemonFetchBatchSize = 20;
@@ -37,29 +39,41 @@ export default class PokemonService {
 
       console.log("cache MISS");
 
-      const response = await pokeApi(`pokemon?limit=${maximumPokemonId}`);
+      return singleFlight(pokemonListCacheKey, async () => {
+        console.log("EXECUTANDO OPERAÇÃO COMPLETA");
 
-      const { results } = this.#validate(pokemonResultSchema, response);
+        const cachedPokemons = pokemonCache.get(pokemonListCacheKey);
 
-      const cards = [];
+        if (cachedPokemons !== undefined) {
+          console.log("cache HIT after single-flight");
 
-      for (
-        let index = 0;
-        index < results.length;
-        index += pokemonFetchBatchSize
-      ) {
-        const batch = results.slice(index, index + pokemonFetchBatchSize);
+          return cachedPokemons;
+        }
 
-        const batchCards = await Promise.all(
-          batch.map(({ url }) => this.#getPokemonCard(url)),
-        );
+        const response = await pokeApi(`pokemon?limit=${maximumPokemonId}`);
 
-        cards.push(...batchCards);
-      }
+        const { results } = this.#validate(pokemonResultSchema, response);
 
-      pokemonCache.set(pokemonListCacheKey, cards);
+        const cards = [];
 
-      return cards;
+        for (
+          let index = 0;
+          index < results.length;
+          index += pokemonFetchBatchSize
+        ) {
+          const batch = results.slice(index, index + pokemonFetchBatchSize);
+
+          const batchCards = await Promise.all(
+            batch.map(({ url }) => this.#getPokemonCard(url)),
+          );
+
+          cards.push(...batchCards);
+        }
+
+        pokemonCache.set(pokemonListCacheKey, cards);
+
+        return cards;
+      });
     } finally {
       console.timeEnd(timerLabel);
     }

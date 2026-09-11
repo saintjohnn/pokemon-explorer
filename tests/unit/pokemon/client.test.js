@@ -1,6 +1,8 @@
 import pokeApi from "../../../backend/src/clients/pokeapi.client.js";
 import PokeApiError from "../../../backend/src/errors/poke-api.error.js";
 import makePokemon from "../../factories/pokemon.factory.js";
+import { mapPokemonDetails } from "../../../backend/src/mappers/pokemon/pokemon.mapper.js";
+import makePokemonDetails from "../../factories/pokemon-details.factory";
 
 function jsonResponse(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -169,10 +171,7 @@ describe("pokeApi", () => {
 
   it("should share the same request for concurrent calls", async () => {
     // Arrange
-    const response = jsonResponse({
-      id: 1,
-      name: "bulbasaur",
-    });
+    const response = jsonResponse(makePokemonDetails());
 
     fetchMock.mockResolvedValue(response);
 
