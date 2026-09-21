@@ -17,10 +17,18 @@ import {
 
 import { singleFlight } from "../utils/single-flight.js";
 
+import { env } from "../../../config/env.js";
+
+import {
+  getPokemonCache,
+  setPokemonCache,
+  deletePokemonCache,
+} from "../cache/pokemon.cache.js";
+
 const maximumPokemonId = 500;
 let requestSequence = 0;
 const pokemonFetchBatchSize = 20;
-const pokemonListCacheKey = "pokemons:all";
+const pokemonListCacheKey = env.pokemonListCacheKey;
 
 export default class PokemonService {
   async getPokemons() {
@@ -29,51 +37,29 @@ export default class PokemonService {
     console.time(timerLabel);
 
     try {
-      const cachedPokemons = pokemonCache.get(pokemonListCacheKey);
+      const cachedEntry = getPokemonCache(pokemonListCacheKey);
 
-      if (cachedPokemons !== undefined) {
+      const cachedState = this.#getCacheState(cachedEntry);
+
+      if (cachedState === "fresh") {
         console.log("cache HIT");
 
-        return cachedPokemons;
+        return cachedEntry.value;
       }
 
-      console.log("cache MISS");
+      if (cachedState === "stale") {
+        console.log("cache HIT");
 
-      return singleFlight(pokemonListCacheKey, async () => {
-        console.log("EXECUTANDO OPERAÇÃO COMPLETA");
+        this.#refreshPokemonsInBackground();
 
-        const cachedPokemons = pokemonCache.get(pokemonListCacheKey);
+        return cachedEntry.value;
+      }
 
-        if (cachedPokemons !== undefined) {
-          console.log("cache HIT after single-flight");
+      console.log("cache MISS: expired or absent");
 
-          return cachedPokemons;
-        }
-
-        const response = await pokeApi(`pokemon?limit=${maximumPokemonId}`);
-
-        const { results } = this.#validate(pokemonResultSchema, response);
-
-        const cards = [];
-
-        for (
-          let index = 0;
-          index < results.length;
-          index += pokemonFetchBatchSize
-        ) {
-          const batch = results.slice(index, index + pokemonFetchBatchSize);
-
-          const batchCards = await Promise.all(
-            batch.map(({ url }) => this.#getPokemonCard(url)),
-          );
-
-          cards.push(...batchCards);
-        }
-
-        pokemonCache.set(pokemonListCacheKey, cards);
-
-        return cards;
-      });
+      return singleFlight(pokemonListCacheKey, () =>
+        this.#fetchAndCachePokemons(),
+      );
     } finally {
       console.timeEnd(timerLabel);
     }
@@ -93,6 +79,70 @@ export default class PokemonService {
     const mapped = mapPokemonDetails(validatedPokemon, pokemonDescription);
 
     return this.#validate(pokemonDetailsSchema, mapped);
+  }
+
+  #getCacheState(entry) {
+    if (!entry) {
+      return "absent";
+    }
+
+    const age = Date.now() - entry.createdAt;
+
+    if (age < env.cacheFreshTtlMs) {
+      return "fresh";
+    }
+
+    if (age < env.cacheStaleTtlMs) {
+      return "stale";
+    }
+
+    deletePokemonCache(pokemonListCacheKey);
+
+    return "expired";
+  }
+
+  #refreshPokemonsInBackground() {
+    singleFlight(pokemonListCacheKey, () =>
+      this.#fetchAndCachePokemons(),
+    ).catch((error) => {
+      console.error("background cache refresh failed", error);
+    });
+  }
+
+  async #fetchAndCachePokemons() {
+    console.log("PERFORMING FULL OPERATION");
+
+    const cachedEntry = getPokemonCache(pokemonListCacheKey);
+
+    if (this.#getCacheState(cachedEntry) === "fresh") {
+      console.log("cache HIT after single-flight");
+
+      return cachedEntry.value;
+    }
+
+    const response = await pokeApi(`pokemon?limit=${maximumPokemonId}`);
+
+    const { results } = this.#validate(pokemonResultSchema, response);
+
+    const cards = [];
+
+    for (
+      let index = 0;
+      index < results.length;
+      index += pokemonFetchBatchSize
+    ) {
+      const batch = results.slice(index, index + pokemonFetchBatchSize);
+
+      const batchCards = await Promise.all(
+        batch.map(({ url }) => this.#getPokemonCard(url)),
+      );
+
+      cards.push(...batchCards);
+    }
+
+    setPokemonCache(pokemonListCacheKey, cards);
+
+    return cards;
   }
 
   async #getPokemonCard(url) {

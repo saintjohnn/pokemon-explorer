@@ -5,8 +5,8 @@
     "vitest": "^4.1.10"
   },
   "scripts": {
-    "dev:backend": "cd backend && node --watch server.js",
-    "dev:frontend": "cd frontend && node --watch server.js",
+    "dev:backend": "node --env-file=.env --watch backend/server.js",
+    "dev:frontend": "node --env-file=.env --watch frontend/server.js",
     "dev": "concurrently -k -n BACKEND,FRONTEND \"npm:dev:backend\" \"npm:dev:frontend\"",
     "test": "vitest",
     "test:unit": "vitest run tests/unit",
@@ -17,7 +17,6 @@
   "dependencies": {
     "express": "^5.2.1",
     "express-handlebars": "^9.0.1",
-    "node-cache": "^5.1.2",
     "zod": "^4.4.3"
   },
   "type": "module",

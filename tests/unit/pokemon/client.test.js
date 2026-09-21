@@ -1,7 +1,6 @@
 import pokeApi from "../../../backend/src/clients/pokeapi.client.js";
 import PokeApiError from "../../../backend/src/errors/poke-api.error.js";
 import makePokemon from "../../factories/pokemon.factory.js";
-import { mapPokemonDetails } from "../../../backend/src/mappers/pokemon/pokemon.mapper.js";
 import makePokemonDetails from "../../factories/pokemon-details.factory";
 
 function jsonResponse(data, status = 200) {
@@ -181,7 +180,7 @@ describe("pokeApi", () => {
     const results = await Promise.all(promises);
 
     // Assert
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledOnce();
     expect(results).toHaveLength(100);
   });
 });

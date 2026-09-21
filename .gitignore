@@ -5,3 +5,7 @@ node_modules
 ab.js
 batch.js
 t.js
+then.js
+.env
+.env.*
+!.env.example

@@ -26,7 +26,6 @@ describe("PokemonService", () => {
   describe("getPokemons", () => {
     it("should return mapped pokemon cards", async () => {
       // Arrange
-      const secondPokemonUrl = "https://pokeapi.co/api/v2/pokemon/2/";
       const bulbasaur = makePokemon();
       const ivysaur = makePokemon({
         id: 2,
@@ -39,7 +38,10 @@ describe("PokemonService", () => {
 
       pokeApi
         .mockResolvedValueOnce({
-          results: [{ url: pokemonUrl }, { url: secondPokemonUrl }],
+          results: [
+            { url: pokemonUrl },
+            { url: "https://pokeapi.co/api/v2/pokemon/2/" },
+          ],
         })
         .mockResolvedValueOnce(bulbasaur)
         .mockResolvedValueOnce(ivysaur);
@@ -59,7 +61,9 @@ describe("PokemonService", () => {
       ]);
       expect(pokeApi).toHaveBeenNthCalledWith(1, listEndpoint);
       expect(pokeApi).toHaveBeenCalledWith(pokemonUrl);
-      expect(pokeApi).toHaveBeenCalledWith(secondPokemonUrl);
+      expect(pokeApi).toHaveBeenCalledWith(
+        "https://pokeapi.co/api/v2/pokemon/2/",
+      );
       expect(pokeApi).toHaveBeenCalledTimes(3);
     });
 

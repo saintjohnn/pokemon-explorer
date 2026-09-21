@@ -1,15 +1,7 @@
 import app from "./app.js";
+import { env } from "../config/env.js";
 
-const defaultPort = 4000;
-
-const configuredPort = process.env.PORT;
-
-const port =
-  configuredPort === undefined ? defaultPort : Number(configuredPort);
-
-if (!Number.isInteger(port) || port <= 0 || port > 65_535) {
-  throw new Error("PORT must be an integer between 1 and 65535");
-}
+const port = env.frontendPort;
 
 app.listen(port, () => {
   console.log(`frontend running on http://localhost:${port}`);
