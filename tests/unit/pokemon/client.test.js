@@ -43,8 +43,6 @@ describe("pokeApi", () => {
 
     const [url, options] = fetchSpy.mock.calls[0];
 
-    console.log(fetchSpy.mock.calls);
-
     expect(url).toBeInstanceOf(URL);
     expect(url.toString()).toBe("https://pokeapi.co/api/v2/pokemon/1");
     expect(options.redirect).toBe("error");

@@ -1,4 +1,3 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import PokemonService from "../../../backend/src/services/pokemon.service.js";
 import pokeApi from "../../../backend/src/clients/pokeapi.client.js";
 import {
@@ -7,22 +6,20 @@ import {
 } from "../../../backend/src/cache/pokemon.cache.js";
 import { env } from "../../../config/env.js";
 import makePokemon from "../../factories/pokemon.factory.js";
+import makePokemonCard from "../../factories/pokemon-card.factory.js";
 
 vi.mock("../../../backend/src/clients/pokeapi.client.js", () => ({
   default: vi.fn(),
 }));
 
-const key = env.pokemonListCacheKey;
+const pokemonListCacheKey = env.pokemonListCacheKey;
 const service = new PokemonService();
-const card = {
-  id: 1,
-  name: "bulbasaur",
-  types: ["grass", "poison"],
-  image:
-    "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png",
-};
+const pokemon = makePokemon();
+const pokemonCard = makePokemonCard();
 
-const list = { results: [{ url: "https://pokeapi.co/api/v2/pokemon/1/" }] };
+const list = {
+  results: [{ url: "https://pokeapi.co/api/v2/pokemonResponse/1/" }],
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -34,33 +31,86 @@ afterEach(() => {
 });
 
 describe("SWR cache behavior", () => {
-  it("returns fresh cache without calling the API", async () => {
-    setPokemonCache(key, [card], Date.now());
+  it("should return fresh cache without calling the API", async () => {
+    //Arrange
+    setPokemonCache(pokemonListCacheKey, [pokemonCard], Date.now());
 
-    await expect(service.getPokemons()).resolves.toStrictEqual([card]);
+    //Act
+    const pokemonResponse = await service.getPokemons();
 
+    //Assert
+    expect(pokemonResponse).toStrictEqual([pokemonCard]);
     expect(pokeApi).not.toHaveBeenCalled();
   });
 
-  it("returns stale data immediately and refreshes in background", async () => {
-    setPokemonCache(key, [card], Date.now() - env.cacheFreshTtlMs - 1);
+  it("should return stale data immediately and refresh in background", async () => {
+    //Arrange
+    setPokemonCache(
+      pokemonListCacheKey,
+      [pokemonCard],
+      Date.now() - env.cacheFreshTtlMs - 1,
+    );
 
-    pokeApi.mockResolvedValueOnce(list).mockResolvedValueOnce(makePokemon());
+    pokeApi.mockResolvedValueOnce(list).mockResolvedValueOnce(pokemon);
 
-    await expect(service.getPokemons()).resolves.toStrictEqual([card]);
+    //Act
+    const pokemonResponse = await service.getPokemons();
+
+    //Assert
+    expect(pokemonResponse).toStrictEqual([pokemonCard]);
 
     await vi.waitFor(() => expect(pokeApi).toHaveBeenCalledTimes(2));
   });
 
-  it("fetches synchronously when the entry is expired", async () => {
-    setPokemonCache(key, [card], Date.now() - env.cacheStaleTtlMs - 1);
+  it("should fetch synchronously when the entry is expired", async () => {
+    //Arrange
+    setPokemonCache(
+      pokemonListCacheKey,
+      [pokemonCard],
+      Date.now() - env.cacheStaleTtlMs - 1,
+    );
 
-    pokeApi.mockResolvedValueOnce(list).mockResolvedValueOnce(makePokemon());
+    pokeApi.mockResolvedValueOnce(list).mockResolvedValueOnce(pokemon);
 
-    const result = await service.getPokemons();
+    //Act
+    const pokemonResponse = await service.getPokemons();
 
-    expect(result).toStrictEqual([card]);
-
+    //Assert
+    expect(pokemonResponse).toStrictEqual([pokemonCard]);
     expect(pokeApi).toHaveBeenCalledTimes(2);
+  });
+
+  it("should return stale data when background refresh fails", async () => {
+    // Arrange
+    setPokemonCache(
+      pokemonListCacheKey,
+      [pokemonCard],
+      Date.now() - env.cacheFreshTtlMs - 1,
+    );
+
+    const refreshError = new Error("PokeAPI unavailable");
+
+    pokeApi.mockResolvedValueOnce(list).mockRejectedValueOnce(refreshError);
+
+    const consoleErrorSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
+    // Act
+    const pokemonResponse = await service.getPokemons();
+
+    // Assert
+    expect(pokemonResponse).toStrictEqual([pokemonCard]);
+
+    await vi.waitFor(() => {
+      expect(pokeApi).toHaveBeenCalledTimes(2);
+    });
+
+    await vi.waitFor(() => {
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "background cache refresh failed",
+        refreshError,
+      );
+    });
   });
 });

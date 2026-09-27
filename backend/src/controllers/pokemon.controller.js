@@ -1,5 +1,6 @@
 import { paramsSchema } from "../schemas/params.schema.js";
 import BadRequestError from "../errors/bad-request.error.js";
+import { paginationSchema } from "../schemas/pagination.schema.js";
 
 export default class PokemonController {
   constructor(pokemonService) {
@@ -8,7 +9,15 @@ export default class PokemonController {
 
   async getPokemons(req, res, next) {
     try {
-      const pokemons = await this.pokemonService.getPokemons();
+      const parsedQuery = paginationSchema.safeParse(req.query);
+
+      if (!parsedQuery.success) {
+        throw new BadRequestError("Invalid pagination parameters", {
+          cause: parsedQuery.error,
+        });
+      }
+
+      const pokemons = await this.pokemonService.getPokemons(parsedQuery.data);
 
       return res.status(200).json(pokemons);
     } catch (error) {

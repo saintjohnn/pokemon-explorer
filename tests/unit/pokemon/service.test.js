@@ -84,12 +84,8 @@ describe("PokemonService", () => {
       // Arrange
       pokeApi.mockResolvedValueOnce({ results: "invalid" });
 
-      console.log(pokemonCache.get("pokemons:all"), "HERE");
-
       // Act
       const error = await pokemonService.getPokemons().catch((error) => error);
-
-      console.log("HERE", error);
 
       // Assert
       expect(error).toBeInstanceOf(ValidationError);

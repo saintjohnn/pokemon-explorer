@@ -232,6 +232,8 @@ describe("GET /pokemons", () => {
     const secondResult = await request(app).get("/pokemons");
 
     //Assert
+    expect(firstResult.statusCode).toBe(200);
+    expect(secondResult.statusCode).toBe(200);
     expect(secondResult.body).toStrictEqual(firstResult.body);
     expect(pokeApi).toHaveBeenCalledTimes(callsAfterFirstRequest);
   });
@@ -264,6 +266,7 @@ describe("GET /pokemons", () => {
     const result = await request(app).get("/pokemons");
 
     //Assert
+    expect(result.statusCode).toBe(200);
     expect(result.body).toStrictEqual(cachedPokemons);
     expect(pokeApi).not.toHaveBeenCalled();
     expect(consoleTimeSpy).toHaveBeenCalled();

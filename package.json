@@ -5,8 +5,8 @@
     "vitest": "^4.1.10"
   },
   "scripts": {
-    "dev:backend": "node --env-file=.env --watch backend/server.js",
-    "dev:frontend": "node --env-file=.env --watch frontend/server.js",
+    "dev:backend": "node --watch --env-file=.env backend/server.js",
+    "dev:frontend": "node --watch --env-file=.env frontend/server.js",
     "dev": "concurrently -k -n BACKEND,FRONTEND \"npm:dev:backend\" \"npm:dev:frontend\"",
     "test": "vitest",
     "test:unit": "vitest run tests/unit",

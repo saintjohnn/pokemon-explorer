@@ -16,7 +16,7 @@ router.get("/", async (req, res, next) => {
 
     return res.render("home", {
       title: "Pokédex",
-      pokemons,
+      pokemons: pokemons.results,
     });
   } catch (error) {
     return next(error);

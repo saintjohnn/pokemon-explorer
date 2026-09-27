@@ -31,15 +31,17 @@ const pokemonFetchBatchSize = 20;
 const pokemonListCacheKey = env.pokemonListCacheKey;
 
 export default class PokemonService {
-  async getPokemons() {
+  async getPokemons({ limit = 50, offset = 0 } = {}) {
+    const cacheKey = `${pokemonListCacheKey}:limit=${limit}:offset=${offset}`;
+
     const timerLabel = `getPokemons:${++requestSequence}`;
 
     console.time(timerLabel);
 
     try {
-      const cachedEntry = getPokemonCache(pokemonListCacheKey);
+      const cachedEntry = getPokemonCache(cacheKey);
 
-      const cachedState = this.#getCacheState(cachedEntry);
+      const cachedState = this.#getCacheState(cachedEntry, cacheKey);
 
       if (cachedState === "fresh") {
         console.log("cache HIT");
@@ -50,15 +52,15 @@ export default class PokemonService {
       if (cachedState === "stale") {
         console.log("cache HIT");
 
-        this.#refreshPokemonsInBackground();
+        this.#refreshPokemonsInBackground(cacheKey, limit, offset);
 
         return cachedEntry.value;
       }
 
       console.log("cache MISS: expired or absent");
 
-      return singleFlight(pokemonListCacheKey, () =>
-        this.#fetchAndCachePokemons(),
+      return singleFlight(cacheKey, () =>
+        this.#fetchAndCachePokemons(cacheKey, limit, offset),
       );
     } finally {
       console.timeEnd(timerLabel);
@@ -81,7 +83,7 @@ export default class PokemonService {
     return this.#validate(pokemonDetailsSchema, mapped);
   }
 
-  #getCacheState(entry) {
+  #getCacheState(entry, cacheKey) {
     if (!entry) {
       return "absent";
     }
@@ -96,33 +98,33 @@ export default class PokemonService {
       return "stale";
     }
 
-    deletePokemonCache(pokemonListCacheKey);
+    deletePokemonCache(cacheKey);
 
     return "expired";
   }
 
-  #refreshPokemonsInBackground() {
-    singleFlight(pokemonListCacheKey, () =>
-      this.#fetchAndCachePokemons(),
+  #refreshPokemonsInBackground(cacheKey, limit, offset) {
+    singleFlight(cacheKey, () =>
+      this.#fetchAndCachePokemons(cacheKey, limit, offset),
     ).catch((error) => {
       console.error("background cache refresh failed", error);
     });
   }
 
-  async #fetchAndCachePokemons() {
+  async #fetchAndCachePokemons(cacheKey, limit, offset) {
     console.log("PERFORMING FULL OPERATION");
 
-    const cachedEntry = getPokemonCache(pokemonListCacheKey);
+    const cachedEntry = getPokemonCache(cacheKey);
 
-    if (this.#getCacheState(cachedEntry) === "fresh") {
+    if (this.#getCacheState(cachedEntry, cacheKey) === "fresh") {
       console.log("cache HIT after single-flight");
 
       return cachedEntry.value;
     }
 
-    const response = await pokeApi(`pokemon?limit=${maximumPokemonId}`);
+    const response = await pokeApi(`pokemon?limit=${limit}&offset=${offset}`);
 
-    const { results } = this.#validate(pokemonResultSchema, response);
+    const { count, results } = this.#validate(pokemonResultSchema, response);
 
     const cards = [];
 
@@ -140,9 +142,11 @@ export default class PokemonService {
       cards.push(...batchCards);
     }
 
-    setPokemonCache(pokemonListCacheKey, cards);
+    const page = { count, results: cards };
 
-    return cards;
+    setPokemonCache(cacheKey, page);
+
+    return page;
   }
 
   async #getPokemonCard(url) {

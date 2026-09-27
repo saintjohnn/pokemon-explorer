@@ -1,6 +1,7 @@
 import express from "express";
 import { engine } from "express-handlebars";
 import path from "node:path";
+import { rootDir } from "./utils/path.js";
 
 import pokemonRouter from "./routes/pokemon.routes.js";
 
@@ -17,9 +18,9 @@ app.engine(
 
 app.set("view engine", "handlebars");
 
-app.set("views", "./views");
+app.set("views", path.join(rootDir, "views"));
 
-app.use(express.static(path.join(process.cwd(), "public")));
+app.use(express.static(path.join(rootDir, "public")));
 
 app.use("/", pokemonRouter);
 

@@ -52,13 +52,12 @@ export const pokemonDetailsSchema = pokemonCardSchema.extend({
 });
 
 export const pokemonResultSchema = z.object({
-  results: z
-    .array(
-      z.object({
-        url: pokeApiUrlSchema,
-      }),
-    )
-    .max(500),
+  count: positiveInt,
+  results: z.array(
+    z.object({
+      url: pokeApiUrlSchema,
+    }),
+  ),
 });
 
 export const pokemonResponseSchema = z.object({

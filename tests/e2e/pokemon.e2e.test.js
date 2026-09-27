@@ -71,8 +71,6 @@ describe("Pokemon API end-to-end behavior", () => {
     // Act
     const response = await request(app).get("/pokemons/1");
 
-    console.log(fetchMock.mock.calls);
-
     // Assert
     expect(response.statusCode).toBe(200);
     expect(response.body).toStrictEqual(makePokemonDetails());
