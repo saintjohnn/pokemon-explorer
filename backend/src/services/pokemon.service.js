@@ -1,5 +1,4 @@
 import pokeApi from "../clients/pokeapi.client.js";
-import pokemonCache from "../cache/pokemon.cache.js";
 import {
   mapPokemonDetails,
   mapPokemonCard,
@@ -14,19 +13,14 @@ import {
   pokeApiPokemonCardResponseSchema,
   pokemonSpeciesResponseSchema,
 } from "../schemas/pokemon.schema.js";
-
 import { singleFlight } from "../utils/single-flight.js";
-
 import { env } from "../../../config/env.js";
-
 import {
   getPokemonCache,
   setPokemonCache,
   deletePokemonCache,
 } from "../cache/pokemon.cache.js";
 
-const maximumPokemonId = 500;
-let requestSequence = 0;
 const pokemonFetchBatchSize = 20;
 const pokemonListCacheKey = env.pokemonListCacheKey;
 
@@ -34,37 +28,29 @@ export default class PokemonService {
   async getPokemons({ limit = 50, offset = 0 } = {}) {
     const cacheKey = `${pokemonListCacheKey}:limit=${limit}:offset=${offset}`;
 
-    const timerLabel = `getPokemons:${++requestSequence}`;
+    const cachedEntry = getPokemonCache(cacheKey);
 
-    console.time(timerLabel);
+    const cachedState = this.#getCacheState(cachedEntry, cacheKey);
 
-    try {
-      const cachedEntry = getPokemonCache(cacheKey);
+    if (cachedState === "fresh") {
+      console.log("cache HIT");
 
-      const cachedState = this.#getCacheState(cachedEntry, cacheKey);
-
-      if (cachedState === "fresh") {
-        console.log("cache HIT");
-
-        return cachedEntry.value;
-      }
-
-      if (cachedState === "stale") {
-        console.log("cache HIT");
-
-        this.#refreshPokemonsInBackground(cacheKey, limit, offset);
-
-        return cachedEntry.value;
-      }
-
-      console.log("cache MISS: expired or absent");
-
-      return singleFlight(cacheKey, () =>
-        this.#fetchAndCachePokemons(cacheKey, limit, offset),
-      );
-    } finally {
-      console.timeEnd(timerLabel);
+      return cachedEntry.value;
     }
+
+    if (cachedState === "stale") {
+      console.log("cache HIT and refresh in background");
+
+      this.#refreshPokemonsInBackground(cacheKey, limit, offset);
+
+      return cachedEntry.value;
+    }
+
+    console.log("cache MISS: expired or absent");
+
+    return singleFlight(cacheKey, () =>
+      this.#fetchAndCachePokemons(cacheKey, limit, offset),
+    );
   }
 
   async getPokemonById(id) {
