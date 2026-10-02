@@ -149,7 +149,7 @@ export default class PokemonService {
   }
 
   #validatePokemonId(id) {
-    if (!Number.isInteger(id) || id <= 0 || id > maximumPokemonId) {
+    if (!Number.isInteger(id) || id <= 0) {
       throw new NotFoundError("Pokemon not found");
     }
   }

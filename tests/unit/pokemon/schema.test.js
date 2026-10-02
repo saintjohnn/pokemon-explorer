@@ -1,4 +1,5 @@
 import { paramsSchema } from "../../../backend/src/schemas/params.schema.js";
+import { paginationSchema } from "../../../backend/src/schemas/pagination.schema";
 import {
   pokeApiPokemonCardResponseSchema,
   pokemonCardSchema,
@@ -42,14 +43,6 @@ const blankStatName = [
 function expectInvalid(result, expectedPath) {
   expect(result.success).toBe(false);
   expect(result.error.issues[0].path).toStrictEqual(expectedPath);
-}
-
-function makePokemonResults(length) {
-  return {
-    results: Array.from({ length }, (_, index) => ({
-      url: `https://pokeapi.co/api/v2/pokemon/${index + 1}/`,
-    })),
-  };
 }
 
 describe("paramsSchema", () => {
@@ -163,11 +156,73 @@ describe("pokemonDetailsSchema specific fields", () => {
   });
 });
 
+describe("paginationSchema", () => {
+  it("should apply default limit and offset when query parameters are absent", () => {
+    //Arrange
+
+    //Act
+    const result = paginationSchema.safeParse({});
+
+    //Assert
+    expect(result.success).toBe(true);
+    expect(result.data).toStrictEqual({ limit: 50, offset: 0 });
+  });
+
+  it("should transform limit and offset query strings into integers", () => {
+    //Arrange
+
+    //Act
+    const result = paginationSchema.safeParse({ limit: "25", offset: "50" });
+
+    //Assert
+    expect(result.success).toBe(true);
+    expect(result.data).toStrictEqual({ limit: 25, offset: 50 });
+  });
+
+  it("should allow a limit greater than 500", () => {
+    //Arrange
+
+    //Act
+    const result = paginationSchema.safeParse({ limit: "501", offset: "0" });
+
+    //Assert
+    expect(result.success).toBe(true);
+    expect(result.data).toStrictEqual({ limit: 501, offset: 0 });
+  });
+
+  it.each([
+    ["limit", "0", ["limit"]],
+    ["limit", "-1", ["limit"]],
+    ["limit", "1.5", ["limit"]],
+    ["limit", "abc", ["limit"]],
+    ["offset", "-1", ["offset"]],
+    ["offset", "1.5", ["offset"]],
+    ["offset", "abc", ["offset"]],
+  ])("should reject an invalid %s value: %s", (field, value, expectedPath) => {
+    //Act
+    const result = paginationSchema.safeParse({ [field]: value });
+
+    //Assert
+    expectInvalid(result, expectedPath);
+  });
+
+  it("should reject an array value instead of a single query parameter", () => {
+    //Arrange
+
+    //Act
+    const result = paginationSchema.safeParse({ limit: ["10", "20"] });
+
+    //Assert
+    expectInvalid(result, ["limit"]);
+  });
+});
+
 describe("pokemonResultSchema", () => {
   it.each([
     [
       "a valid pokemon result list",
       {
+        count: 1302,
         results: [
           { url: pokemonUrl },
           {
@@ -176,8 +231,7 @@ describe("pokemonResultSchema", () => {
         ],
       },
     ],
-    ["an empty result list", { results: [] }],
-    ["exactly 500 results", makePokemonResults(500)],
+    ["an empty result list", { count: 1302, results: [] }],
   ])("should accept %s", (_, response) => {
     // Act
     const result = pokemonResultSchema.safeParse(response);
@@ -187,15 +241,26 @@ describe("pokemonResultSchema", () => {
     expect(result.data).toStrictEqual(response);
   });
 
-  it("should reject more than 500 results", () => {
-    // Arrange
-    const response = makePokemonResults(501);
+  it("should reject a missing count", () => {
+    //Arrange
 
-    // Act
-    const result = pokemonResultSchema.safeParse(response);
+    //Act
+    const result = pokemonResultSchema.safeParse({ results: [] });
 
-    // Assert
-    expectInvalid(result, ["results"]);
+    //Assert
+    expectInvalid(result, ["count"]);
+  });
+
+  it.each([
+    ["zero", 0],
+    ["a negative number", -1],
+    ["a non-integer", 1.5],
+  ])("should reject count when it is %s", (_, count) => {
+    //Act
+    const result = pokemonResultSchema.safeParse({ count, results: [] });
+
+    //Assert
+    expectInvalid(result, ["count"]);
   });
 
   it.each([
@@ -207,6 +272,7 @@ describe("pokemonResultSchema", () => {
   ])("should reject %s", (_, url) => {
     // Arrange
     const response = {
+      count: 1,
       results: [{ url }],
     };
 

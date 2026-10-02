@@ -16,10 +16,13 @@ const pokemonListCacheKey = env.pokemonListCacheKey;
 const service = new PokemonService();
 const pokemon = makePokemon();
 const pokemonCard = makePokemonCard();
-
+const page = { count: 1302, results: [pokemonCard] };
 const list = {
-  results: [{ url: "https://pokeapi.co/api/v2/pokemonResponse/1/" }],
+  count: 1302,
+  results: [{ url: "https://pokeapi.co/api/v2/pokemon/1/" }],
 };
+const page1CacheKey = `${pokemonListCacheKey}:limit=50:offset=0`;
+const page2CacheKey = `${pokemonListCacheKey}:limit=25:offset=50`;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -31,44 +34,37 @@ afterEach(() => {
 });
 
 describe("SWR cache behavior", () => {
-  it("should return fresh cache without calling the API", async () => {
+  it("should return fresh cache for the requested page without calling the API", async () => {
     //Arrange
-    setPokemonCache(pokemonListCacheKey, [pokemonCard], Date.now());
+    setPokemonCache(page1CacheKey, page, Date.now());
 
     //Act
     const pokemonResponse = await service.getPokemons();
 
     //Assert
-    expect(pokemonResponse).toStrictEqual([pokemonCard]);
+    expect(pokemonResponse).toStrictEqual(page);
     expect(pokeApi).not.toHaveBeenCalled();
   });
 
-  it("should return stale data immediately and refresh in background", async () => {
+  it("should use a distinct cache entry for each pagination page", async () => {
     //Arrange
-    setPokemonCache(
-      pokemonListCacheKey,
-      [pokemonCard],
-      Date.now() - env.cacheFreshTtlMs - 1,
-    );
+    const page2 = { count: 1302, results: [makePokemonCard({ id: 2 })] };
 
-    pokeApi.mockResolvedValueOnce(list).mockResolvedValueOnce(pokemon);
+    setPokemonCache(page1CacheKey, page, Date.now());
+    setPokemonCache(page2CacheKey, page2, Date.now());
 
-    //Act
-    const pokemonResponse = await service.getPokemons();
+    //Act + Assert
+    await expect(service.getPokemons()).resolves.toStrictEqual(page);
+    await expect(
+      service.getPokemons({ limit: 25, offset: 50 }),
+    ).resolves.toStrictEqual(page2);
 
-    //Assert
-    expect(pokemonResponse).toStrictEqual([pokemonCard]);
-
-    await vi.waitFor(() => expect(pokeApi).toHaveBeenCalledTimes(2));
+    expect(pokeApi).not.toHaveBeenCalled();
   });
 
-  it("should fetch synchronously when the entry is expired", async () => {
+  it("should return stale data immediately and refresh the requested page in background", async () => {
     //Arrange
-    setPokemonCache(
-      pokemonListCacheKey,
-      [pokemonCard],
-      Date.now() - env.cacheStaleTtlMs - 1,
-    );
+    setPokemonCache(page1CacheKey, page, Date.now() - env.cacheFreshTtlMs - 1);
 
     pokeApi.mockResolvedValueOnce(list).mockResolvedValueOnce(pokemon);
 
@@ -76,17 +72,29 @@ describe("SWR cache behavior", () => {
     const pokemonResponse = await service.getPokemons();
 
     //Assert
-    expect(pokemonResponse).toStrictEqual([pokemonCard]);
+    expect(pokemonResponse).toStrictEqual(page);
+
+    await vi.waitFor(() => expect(pokeApi).toHaveBeenCalledTimes(2));
+    expect(pokeApi).toHaveBeenNthCalledWith(1, "pokemon?limit=50&offset=0");
+  });
+
+  it("should fetch synchronously when the requested page is expired", async () => {
+    //Arrange
+    setPokemonCache(page1CacheKey, page, Date.now() - env.cacheStaleTtlMs - 1);
+
+    pokeApi.mockResolvedValueOnce(list).mockResolvedValueOnce(pokemon);
+
+    //Act
+    const pokemonResponse = await service.getPokemons();
+
+    //Assert
+    expect(pokemonResponse).toStrictEqual(page);
     expect(pokeApi).toHaveBeenCalledTimes(2);
   });
 
   it("should return stale data when background refresh fails", async () => {
     // Arrange
-    setPokemonCache(
-      pokemonListCacheKey,
-      [pokemonCard],
-      Date.now() - env.cacheFreshTtlMs - 1,
-    );
+    setPokemonCache(page1CacheKey, page, Date.now() - env.cacheFreshTtlMs - 1);
 
     const refreshError = new Error("PokeAPI unavailable");
 
@@ -100,11 +108,7 @@ describe("SWR cache behavior", () => {
     const pokemonResponse = await service.getPokemons();
 
     // Assert
-    expect(pokemonResponse).toStrictEqual([pokemonCard]);
-
-    await vi.waitFor(() => {
-      expect(pokeApi).toHaveBeenCalledTimes(2);
-    });
+    expect(pokemonResponse).toStrictEqual(page);
 
     await vi.waitFor(() => {
       expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -112,5 +116,20 @@ describe("SWR cache behavior", () => {
         refreshError,
       );
     });
+  });
+
+  it("should cache the freshly fetched paginated response under its page key", async () => {
+    //Arrange
+    pokeApi.mockResolvedValueOnce(list).mockResolvedValueOnce(pokemon);
+
+    //Act
+    await service.getPokemons({ limit: 25, offset: 50 });
+
+    //Assert
+    expect(pokeApi).toHaveBeenNthCalledWith(1, "pokemon?limit=25&offset=50");
+    expect(await service.getPokemons({ limit: 25, offset: 50 })).toStrictEqual(
+      page,
+    );
+    expect(pokeApi).toHaveBeenCalledTimes(2);
   });
 });

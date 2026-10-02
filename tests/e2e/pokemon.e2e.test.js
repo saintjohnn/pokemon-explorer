@@ -31,7 +31,14 @@ describe("Pokemon API end-to-end behavior", () => {
 
   it("should return pokemon cards through the complete application flow", async () => {
     // Arrange
-    const results = makePokemonResults();
+    const results = {
+      count: 1,
+      results: [
+        {
+          url: "https://pokeapi.co/api/v2/pokemon/1/",
+        },
+      ],
+    };
     const pokemon = makePokemon();
 
     fetchMock
@@ -42,15 +49,19 @@ describe("Pokemon API end-to-end behavior", () => {
     const response = await request(app).get("/pokemons");
 
     // Assert
+    console.log(response.body);
     expect(response.statusCode).toBe(200);
-    expect(response.body).toStrictEqual([makePokemonCard()]);
+    expect(response.body).toStrictEqual({
+      count: 1,
+      results: [makePokemonCard()],
+    });
     expect(fetchMock).toHaveBeenCalledTimes(2);
 
     const [listUrl, listOptions] = fetchMock.mock.calls[0];
     const [pokemonUrl, pokemonOptions] = fetchMock.mock.calls[1];
 
     expect(listUrl.toString()).toBe(
-      "https://pokeapi.co/api/v2/pokemon?limit=500",
+      "https://pokeapi.co/api/v2/pokemon?limit=50&offset=0",
     );
     expect(pokemonUrl.toString()).toBe(results.results[0].url);
     expect(listOptions).toMatchObject({ redirect: "error" });
@@ -100,6 +111,7 @@ describe("Pokemon API end-to-end behavior", () => {
     // Arrange
     fetchMock.mockResolvedValueOnce(
       jsonResponse({
+        count: 1,
         results: [{ url: "https://example.com/api/v2/pokemon/1/" }],
       }),
     );

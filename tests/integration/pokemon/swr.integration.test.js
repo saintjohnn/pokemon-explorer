@@ -14,10 +14,13 @@ vi.mock("../../../backend/src/clients/pokeapi.client.js", () => ({
 }));
 
 const pokemonListCacheKey = env.pokemonListCacheKey;
+const page1CacheKey = `${pokemonListCacheKey}:limit=50:offset=0`;
 const pokemon = makePokemon();
 const pokemonCard = makePokemonCard();
+const stalePage = { count: 1302, results: [pokemonCard] };
 const list = {
-  results: [{ url: "https://pokeapi.co/api/v2/pokemonResponse/1/" }],
+  count: 1302,
+  results: [{ url: "https://pokeapi.co/api/v2/pokemon/1/" }],
 };
 
 beforeEach(() => {
@@ -30,60 +33,52 @@ afterEach(() => {
 });
 
 describe("GET /pokemons - SWR integration", () => {
-  it("should return stale data immediately and refreshes through HTTP flow", async () => {
-    //Arrange
+  it("should return stale paginated data immediately and refresh the same page through HTTP", async () => {
     setPokemonCache(
-      pokemonListCacheKey,
-      [pokemonCard],
+      page1CacheKey,
+      stalePage,
       Date.now() - env.cacheFreshTtlMs - 1,
     );
 
     let resolveDetails;
-
     const detailsPromise = new Promise((resolve) => {
       resolveDetails = resolve;
     });
 
     pokeApi.mockImplementation((url) => {
-      if (url.includes("pokemon?limit=500")) {
+      if (url === "pokemon?limit=50&offset=0") {
         return Promise.resolve(list);
       }
-
       return detailsPromise;
     });
 
-    //Act
     const response = await request(app).get("/pokemons");
 
-    //Assert
     expect(response.statusCode).toBe(200);
-    expect(response.body).toStrictEqual([pokemonCard]);
+    expect(response.body).toStrictEqual(stalePage);
     expect(pokeApi).toHaveBeenCalledTimes(2);
+    expect(pokeApi).toHaveBeenNthCalledWith(1, "pokemon?limit=50&offset=0");
 
     resolveDetails(pokemon);
   });
 
   it("should keep the stale HTTP response successful when background refresh fails", async () => {
-    //Arrange
     setPokemonCache(
-      pokemonListCacheKey,
-      [pokemonCard],
+      page1CacheKey,
+      stalePage,
       Date.now() - env.cacheFreshTtlMs - 1,
     );
 
+    const refreshError = new Error("PokeAPI unavailable");
     let rejectDetails;
-
     const detailsPromise = new Promise((_, reject) => {
       rejectDetails = reject;
     });
 
-    const refreshError = new Error("PokeAPI unavailable");
-
     pokeApi.mockImplementation((url) => {
-      if (url.includes("pokemon?limit=500")) {
+      if (url === "pokemon?limit=50&offset=0") {
         return Promise.resolve(list);
       }
-
       return detailsPromise;
     });
 
@@ -91,12 +86,10 @@ describe("GET /pokemons - SWR integration", () => {
       .spyOn(console, "error")
       .mockImplementation(() => {});
 
-    //Act
     const response = await request(app).get("/pokemons");
 
-    //Assert
     expect(response.statusCode).toBe(200);
-    expect(response.body).toStrictEqual([pokemonCard]);
+    expect(response.body).toStrictEqual(stalePage);
     expect(pokeApi).toHaveBeenCalledTimes(2);
 
     rejectDetails(refreshError);
