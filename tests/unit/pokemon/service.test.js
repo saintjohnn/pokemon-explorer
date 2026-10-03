@@ -231,8 +231,8 @@ describe("PokemonService", () => {
       expect(pokeApi).toHaveBeenCalledTimes(2);
     });
 
-    it.skip.each([-1, 0, 1.5, Number.NaN, 501, "1"])(
-      "should reject the invalid or out-of-range id %j",
+    it.each([-1, 0, 1.5, Number.NaN, '"1"'])(
+      "should reject %s as an invalid Pokemon id",
       async (id) => {
         // Act
         const promise = pokemonService.getPokemonById(id);
@@ -272,18 +272,21 @@ describe("PokemonService", () => {
       );
     });
 
-    it.each([1, 499, 500])("should accept the in-range id %i", async (id) => {
-      // Arrange
-      const apiError = new Error("Stop after ID validation");
-      pokeApi.mockRejectedValueOnce(apiError);
+    it.each([1, 500, 501, 1000])(
+      "should accept positive integer id %i",
+      async (id) => {
+        // Arrange
+        const apiError = new Error("Stop after ID validation");
+        pokeApi.mockRejectedValueOnce(apiError);
 
-      // Act
-      const promise = pokemonService.getPokemonById(id);
+        // Act
+        const promise = pokemonService.getPokemonById(id);
 
-      // Assert
-      await expect(promise).rejects.toBe(apiError);
-      expect(pokeApi).toHaveBeenCalledExactlyOnceWith(`pokemon/${id}`);
-    });
+        // Assert
+        await expect(promise).rejects.toBe(apiError);
+        expect(pokeApi).toHaveBeenCalledExactlyOnceWith(`pokemon/${id}`);
+      },
+    );
 
     it("should propagate an error from the pokemon request", async () => {
       // Arrange

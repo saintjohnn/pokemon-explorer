@@ -22,7 +22,7 @@ const list = {
   results: [{ url: "https://pokeapi.co/api/v2/pokemon/1/" }],
 };
 const page1CacheKey = `${pokemonListCacheKey}:limit=50:offset=0`;
-const page2CacheKey = `${pokemonListCacheKey}:limit=25:offset=50`;
+const page2CacheKey = `${pokemonListCacheKey}:limit=50:offset=50`;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -56,7 +56,7 @@ describe("SWR cache behavior", () => {
     //Act + Assert
     await expect(service.getPokemons()).resolves.toStrictEqual(page);
     await expect(
-      service.getPokemons({ limit: 25, offset: 50 }),
+      service.getPokemons({ limit: 50, offset: 50 }),
     ).resolves.toStrictEqual(page2);
 
     expect(pokeApi).not.toHaveBeenCalled();
@@ -92,7 +92,7 @@ describe("SWR cache behavior", () => {
     expect(pokeApi).toHaveBeenCalledTimes(2);
   });
 
-  it("should return stale data when background refresh fails", async () => {
+  it("should preserve stale data when background refresh fails", async () => {
     // Arrange
     setPokemonCache(page1CacheKey, page, Date.now() - env.cacheFreshTtlMs - 1);
 
@@ -123,11 +123,11 @@ describe("SWR cache behavior", () => {
     pokeApi.mockResolvedValueOnce(list).mockResolvedValueOnce(pokemon);
 
     //Act
-    await service.getPokemons({ limit: 25, offset: 50 });
+    await service.getPokemons({ limit: 50, offset: 50 });
 
     //Assert
-    expect(pokeApi).toHaveBeenNthCalledWith(1, "pokemon?limit=25&offset=50");
-    expect(await service.getPokemons({ limit: 25, offset: 50 })).toStrictEqual(
+    expect(pokeApi).toHaveBeenNthCalledWith(1, "pokemon?limit=50&offset=50");
+    expect(await service.getPokemons({ limit: 50, offset: 50 })).toStrictEqual(
       page,
     );
     expect(pokeApi).toHaveBeenCalledTimes(2);

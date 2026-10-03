@@ -38,7 +38,7 @@ describe("GET /pokemons/:id ", () => {
     expect(pokeApi).toHaveBeenNthCalledWith(2, pokemon.species.url);
   });
 
-  it("should accept the maximum supported pokemon id", async () => {
+  it("should return pokemon details for a valid pokemon id", async () => {
     // Arrange
     const pokemon = makePokemon({
       id: 500,
@@ -118,20 +118,19 @@ describe("GET /pokemons/:id ", () => {
     },
   );
 
-  it.skip.each([0, 501])(
-    "should return 404 for unsupported pokemon id %s without calling PokeAPI",
-    async (id) => {
-      // Act
-      const response = await request(app).get(`/pokemons/${id}`);
+  it("should return 404 for an invalid pokemon id 0 without calling PokeAPI", async (async) => {
+    //Arrange
 
-      // Assert
-      expect(response.statusCode).toBe(404);
-      expect(response.body).toStrictEqual({
-        message: "Pokemon not found",
-      });
-      expect(pokeApi).not.toHaveBeenCalled();
-    },
-  );
+    //Act
+    const response = await request(app).get(`/pokemons/${0}`);
+
+    //Assert
+    expect(response.statusCode).toBe(404);
+    expect(response.body).toStrictEqual({
+      message: "Pokemon not found",
+    });
+    expect(pokeApi).not.toHaveBeenCalled();
+  });
 
   it("should return 502 when the pokemon request returns a PokeApiError", async () => {
     // Arrange

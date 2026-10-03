@@ -255,6 +255,7 @@ describe("pokemonResultSchema", () => {
     ["zero", 0],
     ["a negative number", -1],
     ["a non-integer", 1.5],
+    ["a string", "1302"],
   ])("should reject count when it is %s", (_, count) => {
     //Act
     const result = pokemonResultSchema.safeParse({ count, results: [] });
