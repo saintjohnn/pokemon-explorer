@@ -41,6 +41,7 @@ describe("GET /pokemons - SWR integration", () => {
     );
 
     let resolveDetails;
+
     const detailsPromise = new Promise((resolve) => {
       resolveDetails = resolve;
     });

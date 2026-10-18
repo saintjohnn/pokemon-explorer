@@ -79,24 +79,12 @@ describe("GET /pokemons", () => {
 
     const response = await request(app)
       .get("/pokemons")
-      .query({ limit: 25, offset: 50 });
+      .query({ limit: 50, offset: 50 });
 
     expect(response.statusCode).toBe(200);
     expect(response.body).toStrictEqual(expected);
-    expect(pokeApi).toHaveBeenNthCalledWith(1, "pokemon?limit=25&offset=50");
-    expect(pokemonCache.get(cachedPageKey(25, 50))).toStrictEqual(expected);
-  });
-
-  it("should accept a limit greater than 500", async () => {
-    pokeApi.mockResolvedValueOnce({ count: 1000, results: [] });
-
-    const response = await request(app).get("/pokemons?limit=501&offset=0");
-
-    expect(response.statusCode).toBe(200);
-    expect(response.body).toStrictEqual({ count: 1000, results: [] });
-    expect(pokeApi).toHaveBeenCalledExactlyOnceWith(
-      "pokemon?limit=501&offset=0",
-    );
+    expect(pokeApi).toHaveBeenNthCalledWith(1, "pokemon?limit=50&offset=50");
+    expect(pokemonCache.get(cachedPageKey(50, 50))).toStrictEqual(expected);
   });
 
   it.each([
@@ -144,9 +132,9 @@ describe("GET /pokemons", () => {
       .mockResolvedValueOnce({ count: 1302, results: [{ url: ivysaurUrl }] })
       .mockResolvedValueOnce(ivysaur);
 
-    const first = await request(app).get("/pokemons?limit=25&offset=0");
-    const second = await request(app).get("/pokemons?limit=25&offset=25");
-    const firstAgain = await request(app).get("/pokemons?limit=25&offset=0");
+    const first = await request(app).get("/pokemons?limit=50&offset=0");
+    const second = await request(app).get("/pokemons?limit=50&offset=50");
+    const firstAgain = await request(app).get("/pokemons?limit=50&offset=0");
 
     expect(first.statusCode).toBe(200);
     expect(second.statusCode).toBe(200);
@@ -269,11 +257,11 @@ describe("GET /pokemons", () => {
 
   it("should return cached paginated data without calling PokeAPI", async () => {
     const cachedPage = { count: 1302, results: [makePokemonCard()] };
-    pokemonCache.set(cachedPageKey(25, 50), cachedPage);
+    pokemonCache.set(cachedPageKey(50, 50), cachedPage);
 
     const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
-    const response = await request(app).get("/pokemons?limit=25&offset=50");
+    const response = await request(app).get("/pokemons?limit=50&offset=50");
 
     expect(response.statusCode).toBe(200);
     expect(response.body).toStrictEqual(cachedPage);

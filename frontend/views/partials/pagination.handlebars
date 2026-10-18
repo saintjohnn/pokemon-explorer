@@ -1,0 +1,52 @@
+<nav
+  class="pagination"
+  data-pagination
+  aria-label="Pokédex Pagination"
+  data-current-page="{{currentPage}}"
+  data-total-pages="{{totalPages}}"
+>  
+    
+  <button
+    class="pagination__button pagination__button--arrow"
+    type="button"
+    data-page="{{previousPage}}"
+    aria-label="Previous page"
+    {{#unless hasPrevious}}disabled{{/unless}}
+  > 
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="m14.5 5-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+  </button>
+
+ 
+  <div class="pagination__list">
+    {{#each items}}
+      {{#if (eq type "ellipsis")}}
+        <span class="pagination__ellipsis" aria-hidden="true">...</span>
+
+        {{else}}
+         <button
+          class="pagination__button {{#if isActive}}pagination__button--active{{/if}}"
+          type="button"
+          data-page="{{page}}"
+          {{#if isActive}}aria-current="page"{{/if}}
+          >
+            {{page}}
+          </button>
+      {{/if}}
+    {{/each}}
+  </div>
+
+  <button
+    class="pagination__button pagination__button--arrow"
+    type="button"
+    data-page="{{nextPage}}"
+    aria-label="Next page"
+    {{#unless hasNext}}disabled{{/unless}}
+  >
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="m9.5 5 7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+  </button>
+
+</nav>

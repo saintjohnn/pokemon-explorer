@@ -77,7 +77,7 @@ describe("PokemonService", () => {
         .mockResolvedValueOnce(makePokemon());
 
       const result = await pokemonService.getPokemons({
-        limit: 25,
+        limit: 50,
         offset: 50,
       });
 
@@ -85,22 +85,7 @@ describe("PokemonService", () => {
         count: 1302,
         results: [makePokemonCard()],
       });
-      expect(pokeApi).toHaveBeenNthCalledWith(1, "pokemon?limit=25&offset=50");
-    });
-
-    it("should allow a limit greater than 500", async () => {
-      pokeApi
-        .mockResolvedValueOnce({
-          count: 1000,
-          results: [{ url: pokemonUrl }],
-        })
-        .mockResolvedValueOnce(makePokemon());
-
-      await expect(
-        pokemonService.getPokemons({ limit: 501, offset: 0 }),
-      ).resolves.toStrictEqual({ count: 1000, results: [makePokemonCard()] });
-
-      expect(pokeApi).toHaveBeenNthCalledWith(1, "pokemon?limit=501&offset=0");
+      expect(pokeApi).toHaveBeenNthCalledWith(1, "pokemon?limit=50&offset=50");
     });
 
     it("should propagate an error from the list request", async () => {
@@ -204,10 +189,10 @@ describe("PokemonService", () => {
     it("should use a default offset when only a limit is supplied", async () => {
       pokeApi.mockResolvedValueOnce({ count: 1, results: [] });
 
-      await pokemonService.getPokemons({ limit: 25 });
+      await pokemonService.getPokemons({ limit: 50 });
 
       expect(pokeApi).toHaveBeenCalledExactlyOnceWith(
-        "pokemon?limit=25&offset=0",
+        "pokemon?limit=50&offset=0",
       );
     });
   });

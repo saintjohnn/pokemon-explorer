@@ -3,9 +3,25 @@
     class="container pokemon-list__content"
     aria-labelledby="pokemon-list-title"
   >
-    <h1 id="pokemon-list-title" class="pokemon-list__title">Pokémons</h1>
+ 
+    <div class="pokemon-list__heading">
+      <div>
+        <p class="pokemon-list__eyebrow">National Pokédex</p>
+        <h1 id="pokemon-list-title" class="pokemon-list__title">Pokémons</h1>
+      </div>
 
-    <div class="pokemon-list__grid">
+      <p class="pokemon-list__summary">
+        {{count}}
+        species found
+      </p>
+    </div>
+
+    <div
+      class="pokemon-list__grid"
+      data-pokemon-grid
+      aria-live="polite"
+      aria-busy="false"
+    >
       {{#each pokemons}}
         <article class="pokemon-card">
 
@@ -17,6 +33,7 @@
                   class="pokemon-card__image"
                   src="{{image}}"
                   alt="{{name}} image"
+                  loading="lazy"
                 />
               {{/if}}
             </div>
@@ -30,10 +47,10 @@
                 {{name}}
               </h2>
 
-              <ul class="pokemon-card__types">
+              <ul class="pokemon-card__types" aria-label="Types">
                 {{#each types}}
                   <li class="pokemon-card__type">
-                    {{this}}
+                    {{this}} 
                   </li>
                 {{/each}}
               </ul>
@@ -43,5 +60,6 @@
         </article>
       {{/each}}
     </div>
+    {{> pagination pagination}}
   </section>
 </main>

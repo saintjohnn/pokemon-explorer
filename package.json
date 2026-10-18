@@ -17,6 +17,7 @@
   "dependencies": {
     "express": "^5.2.1",
     "express-handlebars": "^9.0.1",
+    "express-rate-limit": "^8.7.1",
     "zod": "^4.4.3"
   },
   "type": "module",

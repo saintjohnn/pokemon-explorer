@@ -13,6 +13,9 @@ app.engine(
   "handlebars",
   engine({
     defaultLayout: "main",
+    helpers: {
+      eq: (left, right) => left === right,
+    },
   }),
 );
 
@@ -25,13 +28,15 @@ app.use(express.static(path.join(rootDir, "public")));
 app.use("/", pokemonRouter);
 
 app.use((req, res) => {
-  return res.status(404).send("Página não encontrada");
+  return res.status(404).render("not-found", {
+    title: "Page not found | Pokédex",
+  });
 });
 
 app.use((err, req, res, next) => {
   console.error(err);
 
-  return res.status(500).send("Erro interno do servidor");
+  return res.status(500).send("Internal Server Error");
 });
 
 export default app;
