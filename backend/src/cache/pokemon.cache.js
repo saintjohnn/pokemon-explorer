@@ -1,45 +1,45 @@
-const cache = new Map();
+const cache = new Map()
 
 export function getPokemonCache(key) {
-  return cache.get(key);
+	return cache.get(key)
 }
 
 export function setPokemonCache(key, value, now = Date.now()) {
-  const entry = { value, createdAt: now };
+	const entry = { value, createdAt: now }
 
-  cache.set(key, entry);
+	cache.set(key, entry)
 
-  return entry;
+	return entry
 }
 
 export function deletePokemonCache(key) {
-  cache.delete(key);
+	cache.delete(key)
 }
 
 export function clearPokemonCache() {
-  cache.clear();
+	cache.clear()
 }
 
 // Compatibility facade for existing tests and callers that used NodeCache
 
 const pokemonCache = {
-  get(key) {
-    return getPokemonCache(key)?.value;
-  },
+	get(key) {
+		return getPokemonCache(key)?.value
+	},
 
-  set(key, value, _ttl) {
-    setPokemonCache(key, value);
+	set(key, value, _ttl) {
+		setPokemonCache(key, value)
 
-    return true;
-  },
+		return true
+	},
 
-  del(key) {
-    deletePokemonCache(key);
-  },
+	del(key) {
+		deletePokemonCache(key)
+	},
 
-  flushAll() {
-    clearPokemonCache();
-  },
-};
+	flushAll() {
+		clearPokemonCache()
+	},
+}
 
-export default pokemonCache;
+export default pokemonCache

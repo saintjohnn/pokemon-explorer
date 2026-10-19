@@ -1,31 +1,31 @@
-import express from "express";
-import { engine } from "express-handlebars";
-import pokemonRouter from "./src/routes/pokemon.routes.js";
-import errorHandler from "./src/middlewares/app-error.handler.js";
-import internalServerErrorHandler from "./src/middlewares/internal-server-error.handler.js";
- 
-const app = express();
+import express from "express"
+import { engine } from "express-handlebars"
+import errorHandler from "./src/middlewares/app-error.handler.js"
+import internalServerErrorHandler from "./src/middlewares/internal-server-error.handler.js"
+import pokemonRouter from "./src/routes/pokemon.routes.js"
 
-app.disable("x-powered-by");
+const app = express()
 
-app.engine("handlebars", engine());
+app.disable("x-powered-by")
 
-app.set("view engine", "handlebars");
+app.engine("handlebars", engine())
 
-app.set("views", "./views");
+app.set("view engine", "handlebars")
 
-app.use(express.json({ limit: "10kb", strict: true }));
+app.set("views", "./views")
 
-app.use("/pokemons", pokemonRouter);
+app.use(express.json({ limit: "10kb", strict: true }))
 
-app.use((req, res) => {
-  return res.status(404).json({
-    message: "Route not found",
-  });
-});
+app.use("/pokemons", pokemonRouter)
 
-app.use(errorHandler);
+app.use((_, res) => {
+	return res.status(404).json({
+		message: "Route not found",
+	})
+})
 
-app.use(internalServerErrorHandler);
+app.use(errorHandler)
 
-export default app;
+app.use(internalServerErrorHandler)
+
+export default app

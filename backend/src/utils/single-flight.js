@@ -1,17 +1,17 @@
-const inFlightRequests = new Map();
+const inFlightRequests = new Map()
 
 export function singleFlight(key, request) {
-  const existingRequest = inFlightRequests.get(key);
+	const existingRequest = inFlightRequests.get(key)
 
-  if (existingRequest) {
-    return existingRequest;
-  }
+	if (existingRequest) {
+		return existingRequest
+	}
 
-  const promise = request().finally(() => {
-    inFlightRequests.delete(key);
-  });
+	const promise = request().finally(() => {
+		inFlightRequests.delete(key)
+	})
 
-  inFlightRequests.set(key, promise);
+	inFlightRequests.set(key, promise)
 
-  return promise;
+	return promise
 }

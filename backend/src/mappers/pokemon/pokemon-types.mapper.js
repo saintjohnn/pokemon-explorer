@@ -1,3 +1,3 @@
 export default function mapPokemonTypes(types) {
-  return types.map(({ type }) => type.name);
+	return types.map(({ type }) => type.name)
 }

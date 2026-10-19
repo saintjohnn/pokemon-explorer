@@ -1,42 +1,41 @@
-import express from "express";
-import { engine } from "express-handlebars";
-import path from "node:path";
-import { rootDir } from "./utils/path.js";
+import path from "node:path"
+import express from "express"
+import { engine } from "express-handlebars"
+import pokemonRouter from "./routes/pokemon.routes.js"
+import { rootDir } from "./utils/path.js"
 
-import pokemonRouter from "./routes/pokemon.routes.js";
+const app = express()
 
-const app = express();
-
-app.disable("x-powered-by");
+app.disable("x-powered-by")
 
 app.engine(
-  "handlebars",
-  engine({
-    defaultLayout: "main",
-    helpers: {
-      eq: (left, right) => left === right,
-    },
-  }),
-);
+	"handlebars",
+	engine({
+		defaultLayout: "main",
+		helpers: {
+			eq: (left, right) => left === right,
+		},
+	}),
+)
 
-app.set("view engine", "handlebars");
+app.set("view engine", "handlebars")
 
-app.set("views", path.join(rootDir, "views"));
+app.set("views", path.join(rootDir, "views"))
 
-app.use(express.static(path.join(rootDir, "public")));
+app.use(express.static(path.join(rootDir, "public")))
 
-app.use("/", pokemonRouter);
+app.use("/", pokemonRouter)
 
-app.use((req, res) => {
-  return res.status(404).render("not-found", {
-    title: "Page not found | Pokédex",
-  });
-});
+app.use((_, res) => {
+	return res.status(404).render("not-found", {
+		title: "Page not found | Pokédex",
+	})
+})
 
-app.use((err, req, res, next) => {
-  console.error(err);
+app.use((err, _, res, _next) => {
+	console.error(err)
 
-  return res.status(500).send("Internal Server Error");
-});
+	return res.status(500).send("Internal Server Error")
+})
 
-export default app;
+export default app
