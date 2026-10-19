@@ -1,0 +1,21 @@
+echo ""
+echo "🔧 Fixing and checking code..."
+
+if ! npx --no -- lint-staged; then
+  echo ""
+  echo "❌ Code checks or fixes failed."
+  exit 1
+fi
+
+echo ""
+echo "🧪 Running all tests..."
+
+if ! npm run test:all; then
+  echo ""
+  echo "❌ Tests failed. Commit aborted."
+  exit 1
+fi
+
+echo ""
+echo "✅ Code checks passed and all tests succeeded!"
+echo ""

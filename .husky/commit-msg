@@ -1,0 +1,19 @@
+echo ""
+echo "📝 Validating commit message..."
+
+if ! npx --no -- commitlint --edit "$1"; then
+  echo ""
+  echo "❌ Invalid commit message!"
+  echo ""
+  echo "💡 Please follow the Conventional Commits format:"
+  echo "   <type>(<scope>): <description>"
+  echo ""
+  echo "📌 Example:"
+  echo "   feat(pokemon): add search endpoint"
+  echo ""
+  exit 1
+fi
+
+echo ""
+echo "✅ Commit message is valid!"
+echo ""

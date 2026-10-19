@@ -1,25 +1,35 @@
 {
-  "devDependencies": {
-    "concurrently": "^10.0.5",
-    "supertest": "^7.2.2",
-    "vitest": "^4.1.10"
-  },
-  "scripts": {
-    "dev:backend": "node --watch --env-file=.env backend/server.js",
-    "dev:frontend": "node --watch --env-file=.env frontend/server.js",
-    "dev": "concurrently -k -n BACKEND,FRONTEND \"npm:dev:backend\" \"npm:dev:frontend\"",
-    "test": "vitest",
-    "test:unit": "vitest run tests/unit",
-    "test:integration": "vitest run tests/integration",
-    "test:e2e": "vitest run tests/e2e",
-    "test:all": "vitest run"
-  },
-  "dependencies": {
-    "express": "^5.2.1",
-    "express-handlebars": "^9.0.1",
-    "express-rate-limit": "^8.7.1",
-    "zod": "^4.4.3"
-  },
-  "type": "module",
-  "private": true
+	"devDependencies": {
+		"@biomejs/biome": "2.5.15",
+		"@commitlint/cli": "^21.2.4",
+		"@commitlint/config-conventional": "^21.2.4",
+		"concurrently": "^10.0.5",
+		"husky": "^9.1.7",
+		"lint-staged": "^17.6.0",
+		"supertest": "^7.2.2",
+		"vitest": "^4.1.10"
+	},
+	"scripts": {
+		"dev:backend": "node --watch --env-file=.env backend/server.js",
+		"dev:frontend": "node --watch --env-file=.env frontend/server.js",
+		"dev": "concurrently -k -n BACKEND,FRONTEND \"npm:dev:backend\" \"npm:dev:frontend\"",
+		"test": "vitest",
+		"test:unit": "vitest run tests/unit",
+		"test:integration": "vitest run tests/integration",
+		"test:e2e": "vitest run tests/e2e",
+		"test:all": "vitest run",
+		"prepare": "husky",
+		"check": "biome check .",
+		"check:fix": "biome check --write .",
+		"format": "biome format --write .",
+		"lint": "biome lint ."
+	},
+	"dependencies": {
+		"express": "^5.2.1",
+		"express-handlebars": "^9.0.1",
+		"express-rate-limit": "^8.7.1",
+		"zod": "^4.4.3"
+	},
+	"type": "module",
+	"private": true
 }
