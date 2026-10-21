@@ -3,7 +3,7 @@
     class="container pokemon-list__content"
     aria-labelledby="pokemon-list-title"
   >
- 
+  
     <div class="pokemon-list__heading">
       <div>
         <p class="pokemon-list__eyebrow">National Pokédex</p>
@@ -15,6 +15,35 @@
         species found
       </p>
     </div>
+
+    <form class="pokemon-search" role="search" data-pokemon-search-form>
+      <label class="pokemon-search__label" for="pokemon-search-input">Search Pokémon</label>
+      <div class="pokemon-search__control">
+        <svg
+          class="pokemon-search__icon"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <circle cx="10.8" cy="10.8" r="6.8" fill="none" stroke="currentColor" stroke-width="1.8" />
+          <path d="m16 16 4.2 4.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+        </svg> 
+        <input
+          class="pokemon-search__input"
+          id="pokemon-search-input"
+          name="q"
+          type="search"
+          placeholder="Search by Pokémon name..."
+          autocomplete="off"
+          spellcheck="false"
+          aria-describedby="pokemon-search-help"
+          data-pokemon-search
+        />
+      </div>
+      <p class="pokemon-search__help" id="pokemon-search-help">
+        Results update as you type.
+      </p>
+    </form>
 
     <div
       class="pokemon-list__grid"

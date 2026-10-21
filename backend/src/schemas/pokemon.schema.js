@@ -58,6 +58,16 @@ export const pokemonResultSchema = z.object({
 	),
 })
 
+export const pokemonSearchResultSchema = z.object({
+	count: positiveInt,
+	results: z.array(
+		z.object({
+			name: nonEmptyString,
+			url: pokeApiUrlSchema,
+		}),
+	),
+})
+
 export const pokemonResponseSchema = z.object({
 	id: positiveInt,
 	name: nonEmptyString,

@@ -1,6 +1,7 @@
 import BadRequestError from "../errors/bad-request.error.js"
 import { paginationSchema } from "../schemas/pagination.schema.js"
 import { paramsSchema } from "../schemas/params.schema.js"
+import { pokemonSearchQuerySchema } from "../schemas/search.schema.js"
 
 export default class PokemonController {
 	constructor(pokemonService) {
@@ -18,6 +19,24 @@ export default class PokemonController {
 			}
 
 			const pokemons = await this.pokemonService.getPokemons(parsedQuery.data)
+
+			return res.status(200).json(pokemons)
+		} catch (error) {
+			return next(error)
+		}
+	}
+
+	async searchPokemons(req, res, next) {
+		try {
+			const parsedQuery = pokemonSearchQuerySchema.safeParse(req.query)
+
+			if (!parsedQuery.success) {
+				throw new BadRequestError("Invalid search query", {
+					cause: parsedQuery.error,
+				})
+			}
+
+			const pokemons = await this.pokemonService.searchPokemons(parsedQuery.data.q)
 
 			return res.status(200).json(pokemons)
 		} catch (error) {

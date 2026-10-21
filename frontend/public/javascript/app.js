@@ -6,6 +6,9 @@ const themeToggle = window.document.querySelector("[data-theme-toggle]")
 const pagination = window.document.querySelector("[data-pagination]")
 const pokemonGrid = document.querySelector("[data-pokemon-grid]")
 const pokemonSummary = document.querySelector(".pokemon-list__summary")
+const pokemonSearch = document.querySelector("[data-pokemon-search]")
+
+let activeListRequestId = 0
 
 function getSavedTheme() {
 	try {
@@ -270,8 +273,7 @@ async function loadPage(page, { replaceHistory = true } = {}) {
 		return
 	}
 
-	const requestId = loadPage.requestId + 1
-	loadPage.requestId = requestId
+	const requestId = ++activeListRequestId
 
 	pagination.classList.add("is-loading")
 	pokemonGrid.classList.add("is-loading")
@@ -291,7 +293,7 @@ async function loadPage(page, { replaceHistory = true } = {}) {
 
 		const data = await response.json()
 
-		if (requestId !== loadPage.requestId) {
+		if (requestId !== activeListRequestId) {
 			return
 		}
 
@@ -317,7 +319,7 @@ async function loadPage(page, { replaceHistory = true } = {}) {
 
 		window.scrollTo({ top: 0, behavior: "smooth" })
 	} catch (error) {
-		if (requestId !== loadPage.requestId) {
+		if (requestId !== activeListRequestId) {
 			return
 		}
 
@@ -334,7 +336,82 @@ async function loadPage(page, { replaceHistory = true } = {}) {
 	}
 }
 
-loadPage.requestId = 0
+async function searchPokemons(query) {
+	if (!pokemonGrid || !pagination) {
+		return
+	}
+
+	const requestId = ++activeListRequestId
+
+	pagination.hidden = true
+	pokemonGrid.classList.add("is-loading")
+	pokemonGrid.setAttribute("aria-busy", "true")
+	renderSkeletons()
+
+	try {
+		const searchParams = new URLSearchParams({ q: query })
+		const response = await fetch(`/api/pokemons/search?${searchParams}`, {
+			headers: { Accept: "application/json" },
+		})
+
+		if (!response.ok) {
+			throw new Error(`Pokémon search failed with status ${response.status}`)
+		}
+
+		const data = await response.json()
+
+		if (requestId !== activeListRequestId) {
+			return
+		}
+
+		if (data.results.length > 0) {
+			renderPokemonCards(data.results)
+		} else {
+			const emptyState = document.createElement("p")
+			emptyState.className = "pokemon-list__error"
+			emptyState.textContent = `No Pokémon found for "${query}".`
+			pokemonGrid.replaceChildren(emptyState)
+		}
+
+		if (pokemonSummary) {
+			pokemonSummary.textContent =
+				data.count > data.results.length
+					? `Showing ${data.results.length} of ${data.count} matching Pokémon`
+					: `${data.count} Pokémon found`
+		}
+	} catch (error) {
+		if (requestId !== activeListRequestId) {
+			return
+		}
+
+		const errorCard = document.createElement("div")
+		errorCard.className = "pokemon-list__error"
+		errorCard.textContent = "Could not search Pokémon. Try again."
+		pokemonGrid.replaceChildren(errorCard)
+
+		console.error(error)
+	} finally {
+		if (requestId === activeListRequestId) {
+			pokemonGrid.classList.remove("is-loading")
+			pokemonGrid.setAttribute("aria-busy", "false")
+		}
+	}
+}
+
+pokemonSearch?.addEventListener("input", (event) => {
+	const query = event.currentTarget.value.trim()
+
+	if (!query) {
+		loadPage(1)
+		return
+	}
+
+	searchPokemons(query)
+})
+
+pokemonSearch?.form?.addEventListener("submit", (event) => {
+	event.preventDefault()
+})
 
 pagination?.addEventListener("click", (event) => {
 	const button = event.target.closest("[data-page]")

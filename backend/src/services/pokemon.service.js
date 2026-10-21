@@ -10,6 +10,7 @@ import {
 	pokemonDetailsSchema,
 	pokemonResponseSchema,
 	pokemonResultSchema,
+	pokemonSearchResultSchema,
 	pokemonSpeciesResponseSchema,
 } from "../schemas/pokemon.schema.js"
 import { singleFlight } from "../utils/single-flight.js"
@@ -42,6 +43,28 @@ export default class PokemonService {
 		console.log("cache MISS: expired or absent")
 
 		return singleFlight(cacheKey, () => this.#fetchAndCachePokemons(cacheKey, limit, offset))
+	}
+
+	async searchPokemons(query) {
+		const normalizedQuery = query.trim().toLowerCase()
+		const response = await pokeApi("pokemon?limit=2000&offset=0")
+		const { results } = this.#validate(pokemonSearchResultSchema, response)
+
+		const matches = results.filter(({ name }) => name.includes(normalizedQuery))
+		const matchingPokemons = matches.slice(0, 50)
+		const cards = []
+
+		for (let index = 0; index < matchingPokemons.length; index += pokemonFetchBatchSize) {
+			const batch = matchingPokemons.slice(index, index + pokemonFetchBatchSize)
+			const batchCards = await Promise.all(batch.map(({ url }) => this.#getPokemonCard(url)))
+
+			cards.push(...batchCards)
+		}
+
+		return {
+			count: matches.length,
+			results: cards,
+		}
 	}
 
 	async getPokemonById(id) {

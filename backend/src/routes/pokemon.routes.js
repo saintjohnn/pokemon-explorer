@@ -8,6 +8,7 @@ const pokemonController = new PokemonController(pokemonService)
 
 pokemonRouter
 	.get("/", pokemonController.getPokemons.bind(pokemonController))
+	.get("/search", pokemonController.searchPokemons.bind(pokemonController))
 	.get("/:id", pokemonController.getPokemonById.bind(pokemonController))
 
 export default pokemonRouter

@@ -84,6 +84,26 @@ router.get("/api/pokemons", apiLimiter, async (req, res, next) => {
 	}
 })
 
+router.get("/api/pokemons/search", apiLimiter, async (req, res, next) => {
+	try {
+		const query = typeof req.query.q === "string" ? req.query.q.trim() : ""
+
+		if (!query) {
+			return res.status(400).json({
+				message: "A search query is required",
+			})
+		}
+
+		const searchParams = new URLSearchParams({ q: query })
+		const response = await fetch(`${backendUrl}/pokemons/search?${searchParams}`)
+		const body = await response.json()
+
+		return res.status(response.status).json(body)
+	} catch (error) {
+		return next(error)
+	}
+})
+
 router.get("/pokemons/:id", async (req, res, next) => {
 	try {
 		const { id } = req.params
