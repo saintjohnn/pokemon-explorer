@@ -334,6 +334,7 @@ button {
 	opacity: 0.8;
 }
 
+.pokemon-list__empty,
 .pokemon-list__error {
 	grid-column: 1 / -1;
 	padding: 2rem;

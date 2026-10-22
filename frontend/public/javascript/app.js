@@ -368,7 +368,7 @@ async function searchPokemons(query) {
 			renderPokemonCards(data.results)
 		} else {
 			const emptyState = document.createElement("p")
-			emptyState.className = "pokemon-list__error"
+			emptyState.className = "pokemon-list__empty"
 			emptyState.textContent = `No Pokémon found for "${query}".`
 			pokemonGrid.replaceChildren(emptyState)
 		}
