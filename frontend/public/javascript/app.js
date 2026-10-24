@@ -10,6 +10,8 @@ const pokemonSearch = document.querySelector("[data-pokemon-search]")
 
 let activeListRequestId = 0
 
+let isDefaultPageLoaded = true
+
 function getSavedTheme() {
 	try {
 		const theme = window.localStorage.getItem(THEME_STORAGE_KEY)
@@ -402,10 +404,14 @@ pokemonSearch?.addEventListener("input", (event) => {
 	const query = event.currentTarget.value.trim()
 
 	if (!query) {
+		if (isDefaultPageLoaded) return
+
+		isDefaultPageLoaded = true
 		loadPage(1)
 		return
 	}
 
+	isDefaultPageLoaded = false
 	searchPokemons(query)
 })
 

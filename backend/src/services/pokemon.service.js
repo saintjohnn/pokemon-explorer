@@ -1,5 +1,6 @@
 import { env } from "../../../config/env.js"
 import { deletePokemonCache, getPokemonCache, setPokemonCache } from "../cache/pokemon.cache.js"
+import pokemonListCache from "../cache/pokemon-list.cache.js"
 import pokeApi from "../clients/pokeapi.client.js"
 import NotFoundError from "../errors/not-found.error.js"
 import ValidationError from "../errors/validation.error.js"
@@ -47,24 +48,41 @@ export default class PokemonService {
 
 	async searchPokemons(query) {
 		const normalizedQuery = query.trim().toLowerCase()
-		const response = await pokeApi("pokemon?limit=2000&offset=0")
-		const { results } = this.#validate(pokemonSearchResultSchema, response)
 
-		const matches = results.filter(({ name }) => name.includes(normalizedQuery))
+		if (!normalizedQuery) {
+			return { count: 0, results: [] }
+		}
+
+		const searchCacheKey = `pokemon-search:q=${normalizedQuery}`
+		const cachedSearch = getPokemonCache(searchCacheKey)
+
+		if (cachedSearch !== undefined) {
+			return cachedSearch.value
+		}
+
+		const pokemonList = await this.#getPokemonList()
+
+		const matches = pokemonList.filter(({ name }) => name.includes(normalizedQuery))
+
 		const matchingPokemons = matches.slice(0, 50)
 		const cards = []
 
 		for (let index = 0; index < matchingPokemons.length; index += pokemonFetchBatchSize) {
 			const batch = matchingPokemons.slice(index, index + pokemonFetchBatchSize)
+
 			const batchCards = await Promise.all(batch.map(({ url }) => this.#getPokemonCard(url)))
 
 			cards.push(...batchCards)
 		}
 
-		return {
+		const data = {
 			count: matches.length,
 			results: cards,
 		}
+
+		setPokemonCache(searchCacheKey, data)
+
+		return data
 	}
 
 	async getPokemonById(id) {
@@ -139,6 +157,22 @@ export default class PokemonService {
 		setPokemonCache(cacheKey, page)
 
 		return page
+	}
+
+	async #getPokemonList() {
+		const cacheKey = "pokemon-list"
+		const cachedPokemonList = pokemonListCache.get(cacheKey)
+
+		if (cachedPokemonList !== undefined) {
+			return cachedPokemonList
+		}
+
+		const response = await pokeApi("pokemon?limit=2000&offset=0")
+		const { results } = this.#validate(pokemonSearchResultSchema, response)
+
+		pokemonListCache.set(cacheKey, results)
+
+		return results
 	}
 
 	async #getPokemonCard(url) {
