@@ -1,12 +1,23 @@
 import path from "node:path"
 import express from "express"
 import { engine } from "express-handlebars"
+import helmet from "helmet"
 import pokemonRouter from "./routes/pokemon.routes.js"
 import { rootDir } from "./utils/path.js"
 
 const app = express()
 
 app.disable("x-powered-by")
+
+app.use(
+	helmet({
+		contentSecurityPolicy: {
+			directives: {
+				imgSrc: ["'self'", "data:", "https://raw.githubusercontent.com"],
+			},
+		},
+	}),
+)
 
 app.engine(
 	"handlebars",

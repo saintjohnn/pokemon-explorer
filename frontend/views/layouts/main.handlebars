@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -9,24 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap"
     rel="stylesheet"
     >
-    <script>
-      (() => {
-        const key = "pokedex-theme";
-        let saved = null;
-
-        try {
-          saved = window.localStorage.getItem(key);
-        } catch {
-          // Without access to storage, uses system preference.
-        }
-
-        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-
-        const theme = saved === "light" || saved === "dark" ? saved : prefersDark ? "dark" : "light";
-
-        document.documentElement.dataset.theme = theme;
-      })()
-    </script>
+    <script type="module" src="/javascript/fouc.js"></script>
     <link rel="stylesheet" href="/css/styles.css"/>
     <script type="module" src="/javascript/app.js"></script>
   </head> 

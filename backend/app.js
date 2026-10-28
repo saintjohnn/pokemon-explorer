@@ -1,5 +1,5 @@
 import express from "express"
-import { engine } from "express-handlebars"
+import helmet from "helmet"
 import errorHandler from "./src/middlewares/app-error.handler.js"
 import internalServerErrorHandler from "./src/middlewares/internal-server-error.handler.js"
 import pokemonRouter from "./src/routes/pokemon.routes.js"
@@ -8,11 +8,11 @@ const app = express()
 
 app.disable("x-powered-by")
 
-app.engine("handlebars", engine())
-
-app.set("view engine", "handlebars")
-
-app.set("views", "./views")
+app.use(
+	helmet({
+		contentSecurityPolicy: false,
+	}),
+)
 
 app.use(express.json({ limit: "10kb", strict: true }))
 
