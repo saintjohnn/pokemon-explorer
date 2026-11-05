@@ -46,14 +46,14 @@ export default class PokemonService {
 		return singleFlight(cacheKey, () => this.#fetchAndCachePokemons(cacheKey, limit, offset))
 	}
 
-	async searchPokemons(query) {
+	async searchPokemons(query, { limit = 50, offset = 0 } = {}) {
 		const normalizedQuery = query.trim().toLowerCase()
 
 		if (!normalizedQuery) {
 			return { count: 0, results: [] }
 		}
 
-		const searchCacheKey = `pokemon-search:q=${normalizedQuery}`
+		const searchCacheKey = `pokemon-search:q=${normalizedQuery}:limit=${limit}:offset=${offset}`
 		const cachedSearch = getPokemonCache(searchCacheKey)
 
 		if (cachedSearch !== undefined) {
@@ -64,7 +64,7 @@ export default class PokemonService {
 
 		const matches = pokemonList.filter(({ name }) => name.includes(normalizedQuery))
 
-		const matchingPokemons = matches.slice(0, 50)
+		const matchingPokemons = matches.slice(offset, offset + limit)
 		const cards = []
 
 		for (let index = 0; index < matchingPokemons.length; index += pokemonFetchBatchSize) {

@@ -37,6 +37,30 @@ describe("GET /pokemons/search", () => {
 		vi.restoreAllMocks()
 	})
 
+	it("should paginate matching Pokémon using limit and offset", async () => {
+		pokeApi
+			.mockResolvedValueOnce(
+				makePokemonList([
+					{ name: "bulbasaur", url: pokemonUrls[0] },
+					{ name: "ivysaur", url: pokemonUrls[1] },
+					{ name: "venusaur", url: pokemonUrls[2] },
+				]),
+			)
+			.mockResolvedValueOnce(makePokemon({ id: 3, name: "venusaur" }))
+
+		const response = await request(app)
+			.get("/pokemons/search")
+			.query({ q: "saur", limit: "2", offset: "2" })
+
+		expect(response.statusCode).toBe(200)
+		expect(response.body).toStrictEqual({
+			count: 3,
+			results: [makePokemonCard({ id: 3, name: "venusaur" })],
+		})
+		expect(pokeApi).toHaveBeenCalledTimes(2)
+		expect(pokeApi).toHaveBeenNthCalledWith(2, pokemonUrls[2])
+	})
+
 	it("should return Pokémon whose names include the case-insensitive query", async () => {
 		const list = makePokemonList([
 			{ name: "bulbasaur", url: pokemonUrls[0] },

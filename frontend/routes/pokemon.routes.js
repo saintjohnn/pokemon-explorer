@@ -94,7 +94,13 @@ router.get("/api/pokemons/search", apiLimiter, async (req, res, next) => {
 			})
 		}
 
-		const searchParams = new URLSearchParams({ q: query })
+		const limit = Number(req.query.limit)
+		const offset = Number(req.query.offset)
+		const searchParams = new URLSearchParams({
+			q: query,
+			limit: String(Number.isInteger(limit) && limit > 0 ? limit : POKEMONS_PER_PAGE),
+			offset: String(Number.isInteger(offset) && offset >= 0 ? offset : 0),
+		})
 		const response = await fetch(`${backendUrl}/pokemons/search?${searchParams}`)
 		const body = await response.json()
 

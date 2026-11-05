@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-const queryInteger = (fallback, minimum) =>
+export const queryInteger = (fallback, minimum) =>
 	z
 		.string()
 		.regex(/^\d+$/)

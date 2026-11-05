@@ -36,7 +36,10 @@ export default class PokemonController {
 				})
 			}
 
-			const pokemons = await this.pokemonService.searchPokemons(parsedQuery.data.q)
+			const pokemons = await this.pokemonService.searchPokemons(
+				parsedQuery.data.q,
+				parsedQuery.data,
+			)
 
 			return res.status(200).json(pokemons)
 		} catch (error) {
