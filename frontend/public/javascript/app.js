@@ -1,5 +1,9 @@
+import { debounce, throttle } from "./async.js"
+
 const THEME_STORAGE_KEY = "pokedex-theme"
 const DEFAULT_LIMIT = 50
+const SEARCH_DEBOUNCE_MS = 300
+const PAGINATION_THROTTLE_MS = 250
 
 const root = window.document.documentElement
 const themeToggle = window.document.querySelector("[data-theme-toggle]")
@@ -9,8 +13,28 @@ const pokemonSummary = document.querySelector(".pokemon-list__summary")
 const pokemonSearch = document.querySelector("[data-pokemon-search]")
 
 let activeListRequestId = 0
+let activeListRequestController = null
 
 let isDefaultPageLoaded = true
+let activeSearchQuery = ""
+
+function startActiveListRequest() {
+	activeListRequestController?.abort()
+
+	const controller = new AbortController()
+	activeListRequestController = controller
+
+	return {
+		requestId: ++activeListRequestId,
+		controller,
+	}
+}
+
+function cancelActiveListRequest() {
+	activeListRequestController?.abort()
+	activeListRequestController = null
+	activeListRequestId += 1
+}
 
 function getSavedTheme() {
 	try {
@@ -275,8 +299,9 @@ async function loadPage(page, { replaceHistory = true } = {}) {
 		return
 	}
 
-	const requestId = ++activeListRequestId
+	const { requestId, controller } = startActiveListRequest()
 
+	pagination.hidden = false
 	pagination.classList.add("is-loading")
 	pokemonGrid.classList.add("is-loading")
 	pokemonGrid.setAttribute("aria-busy", "true")
@@ -287,6 +312,7 @@ async function loadPage(page, { replaceHistory = true } = {}) {
 	try {
 		const response = await fetch(`/api/pokemons?limit=${DEFAULT_LIMIT}&offset=${offset}`, {
 			headers: { Accept: "application/json" },
+			signal: controller.signal,
 		})
 
 		if (!response.ok) {
@@ -335,25 +361,34 @@ async function loadPage(page, { replaceHistory = true } = {}) {
 		pokemonGrid.replaceChildren(errorCard)
 
 		console.error(error)
+	} finally {
+		if (requestId === activeListRequestId) {
+			activeListRequestController = null
+		}
 	}
 }
 
-async function searchPokemons(query) {
+async function searchPokemons(query, page = 1) {
 	if (!pokemonGrid || !pagination) {
 		return
 	}
 
-	const requestId = ++activeListRequestId
+	const { requestId, controller } = startActiveListRequest()
 
 	pagination.hidden = true
 	pokemonGrid.classList.add("is-loading")
 	pokemonGrid.setAttribute("aria-busy", "true")
-	renderSkeletons()
 
 	try {
-		const searchParams = new URLSearchParams({ q: query })
+		const offset = (page - 1) * DEFAULT_LIMIT
+		const searchParams = new URLSearchParams({
+			q: query,
+			limit: String(DEFAULT_LIMIT),
+			offset: String(offset),
+		})
 		const response = await fetch(`/api/pokemons/search?${searchParams}`, {
 			headers: { Accept: "application/json" },
+			signal: controller.signal,
 		})
 
 		if (!response.ok) {
@@ -366,6 +401,8 @@ async function searchPokemons(query) {
 			return
 		}
 
+		const totalPages = Math.ceil(data.count / DEFAULT_LIMIT)
+
 		if (data.results.length > 0) {
 			renderPokemonCards(data.results)
 		} else {
@@ -375,11 +412,22 @@ async function searchPokemons(query) {
 			pokemonGrid.replaceChildren(emptyState)
 		}
 
+		if (totalPages > 1) {
+			pagination.hidden = false
+			pagination.dataset.currentPage = String(page)
+			pagination.dataset.totalPages = String(totalPages)
+			pagination.innerHTML = createPaginationMarkup(page, totalPages)
+		} else {
+			pagination.hidden = true
+		}
+
 		if (pokemonSummary) {
-			pokemonSummary.textContent =
-				data.count > data.results.length
-					? `Showing ${data.results.length} of ${data.count} matching Pokémon`
-					: `${data.count} Pokémon found`
+			if (data.count > DEFAULT_LIMIT) {
+				const shownCount = Math.min(page * DEFAULT_LIMIT, data.count)
+				pokemonSummary.textContent = `Showing ${shownCount} of ${data.count} matching Pokémon`
+			} else {
+				pokemonSummary.textContent = `${data.count} Pokémon found`
+			}
 		}
 	} catch (error) {
 		if (requestId !== activeListRequestId) {
@@ -394,25 +442,42 @@ async function searchPokemons(query) {
 		console.error(error)
 	} finally {
 		if (requestId === activeListRequestId) {
+			activeListRequestController = null
 			pokemonGrid.classList.remove("is-loading")
 			pokemonGrid.setAttribute("aria-busy", "false")
 		}
 	}
 }
 
+const schedulePokemonSearch = debounce((query) => searchPokemons(query), SEARCH_DEBOUNCE_MS)
+const loadPageThrottled = throttle((page) => loadPage(page), PAGINATION_THROTTLE_MS)
+const loadSearchPageThrottled = throttle(
+	(page) => searchPokemons(activeSearchQuery, page),
+	PAGINATION_THROTTLE_MS,
+)
+
 pokemonSearch?.addEventListener("input", (event) => {
 	const query = event.currentTarget.value.trim()
+
+	schedulePokemonSearch.cancel()
 
 	if (!query) {
 		if (isDefaultPageLoaded) return
 
+		activeSearchQuery = ""
+		cancelActiveListRequest()
 		isDefaultPageLoaded = true
 		loadPage(1)
 		return
 	}
 
 	isDefaultPageLoaded = false
-	searchPokemons(query)
+	activeSearchQuery = query
+	if (pagination) pagination.hidden = true
+	cancelActiveListRequest()
+	pokemonGrid?.classList.remove("is-loading")
+	pokemonGrid?.setAttribute("aria-busy", "false")
+	schedulePokemonSearch(query)
 })
 
 pokemonSearch?.form?.addEventListener("submit", (event) => {
@@ -428,8 +493,13 @@ pagination?.addEventListener("click", (event) => {
 
 	const page = Number(button.dataset.page)
 
-	if (Number.isInteger(page)) {
-		loadPage(page)
+	if (Number.isInteger(page) && page !== Number(pagination.dataset.currentPage)) {
+		if (isDefaultPageLoaded) {
+			loadPageThrottled(page)
+		} else {
+			window.scrollTo({ top: 0, behavior: "smooth" })
+			loadSearchPageThrottled(page)
+		}
 	}
 })
 

@@ -1,4 +1,13 @@
 {
+	"name": "pokemon-app",
+	"version": "1.0.0",
+	"description": "Pokédex web application built with Node.js and Express, featuring Pokémon search, pagination, cache, and automated tests.",
+	"license": "MIT",
+	"private": true,
+	"type": "module",
+	"engines": {
+		"node": "24.x"
+	},
 	"devDependencies": {
 		"@biomejs/biome": "2.5.15",
 		"@commitlint/cli": "^21.2.4",
@@ -31,7 +40,5 @@
 		"helmet": "^8.3.0",
 		"node-cache": "^5.1.2",
 		"zod": "^4.4.3"
-	},
-	"type": "module",
-	"private": true
+	}
 }

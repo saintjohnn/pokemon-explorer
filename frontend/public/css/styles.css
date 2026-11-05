@@ -494,6 +494,10 @@ button {
 	padding-top: 0.25rem;
 }
 
+.pagination[hidden] {
+	display: none;
+}
+
 .pagination.is-loading {
 	pointer-events: none;
 	opacity: 0.65;
