@@ -8,13 +8,25 @@ describe("getBodyParserError", () => {
 		["charset.unsupported", 415, "Unsupported charset"],
 		["encoding.unsupported", 415, "Unsupported content encoding"],
 	])("should resolve %s", (type, statusCode, message) => {
-		expect(getBodyParserError(type)).toStrictEqual({ statusCode, message })
+		// Arrange
+
+		// Act
+		const result = getBodyParserError(type)
+
+		// Assert
+		expect(result).toStrictEqual({ statusCode, message })
 	})
 
 	it.each([undefined, null, "unknown.error", "toString", "constructor"])(
 		"should return undefined for an unregistered type: %j",
 		(type) => {
-			expect(getBodyParserError(type)).toBeUndefined()
+			// Arrange
+
+			// Act
+			const result = getBodyParserError(type)
+
+			// Assert
+			expect(result).toBeUndefined()
 		},
 	)
 })

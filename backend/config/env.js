@@ -12,12 +12,8 @@ function parsePositiveInteger(value, fallback) {
 
 export const env = {
 	port: parsePort(process.env.PORT, 3000),
-	frontendPort: parsePort(process.env.FRONTEND_PORT, 4000),
-
 	pokemonListCacheKey: process.env.POKEMON_LIST_CACHE_KEY ?? "pokemons:all",
-
 	cacheFreshTtlMs: parsePositiveInteger(process.env.CACHE_FRESH_TTL_MS, 60_000),
-
 	cacheStaleTtlMs: parsePositiveInteger(process.env.CACHE_STALE_TTL_MS, 300_000),
 }
 

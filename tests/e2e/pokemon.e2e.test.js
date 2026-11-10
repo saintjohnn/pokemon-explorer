@@ -1,6 +1,6 @@
 import request from "supertest"
 import app from "../../backend/app.js"
-import pokemonCache from "../../backend/src/cache/pokemon.cache"
+import pokemonCache from "../../backend/src/cache/pokemon.cache.js"
 import makePokemon from "../factories/pokemon.factory.js"
 import makePokemonCard from "../factories/pokemon-card.factory.js"
 import makePokemonDetails from "../factories/pokemon-details.factory.js"
@@ -48,7 +48,6 @@ describe("Pokemon API end-to-end behavior", () => {
 		const response = await request(app).get("/pokemons")
 
 		// Assert
-		console.log(response.body)
 		expect(response.statusCode).toBe(200)
 		expect(response.body).toStrictEqual({
 			count: 1,

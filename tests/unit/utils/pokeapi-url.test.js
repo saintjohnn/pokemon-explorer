@@ -7,7 +7,13 @@ describe("PokeAPI URL utilities", () => {
 			"https://pokeapi.co/api/v2/pokemon-species/1/",
 			"https://pokeapi.co/api/v2/pokemon?limit=500",
 		])("should accept an allowed absolute PokeAPI URL: %s", (value) => {
-			expect(isAllowedPokeApiUrl(value)).toBe(true)
+			// Arrange
+
+			// Act
+			const result = isAllowedPokeApiUrl(value)
+
+			// Assert
+			expect(result).toBe(true)
 		})
 
 		it.each([
@@ -22,7 +28,13 @@ describe("PokeAPI URL utilities", () => {
 			["a similar path prefix", "https://pokeapi.co/api/v20/pokemon/1/"],
 			["embedded credentials", "https://user:pass@pokeapi.co/api/v2/pokemon/1/"],
 		])("should reject %s", (_, value) => {
-			expect(isAllowedPokeApiUrl(value)).toBe(false)
+			// Arrange
+
+			// Act
+			const result = isAllowedPokeApiUrl(value)
+
+			// Assert
+			expect(result).toBe(false)
 		})
 
 		it.each([
@@ -35,7 +47,13 @@ describe("PokeAPI URL utilities", () => {
 			"",
 			"   ",
 		])("should reject a non-string or empty value: %j", (value) => {
-			expect(isAllowedPokeApiUrl(value)).toBe(false)
+			// Arrange
+
+			// Act
+			const result = isAllowedPokeApiUrl(value)
+
+			// Assert
+			expect(result).toBe(false)
 		})
 	})
 
@@ -46,23 +64,36 @@ describe("PokeAPI URL utilities", () => {
 			["pokemon?limit=500", "https://pokeapi.co/api/v2/pokemon?limit=500"],
 			["/api/v2/pokemon/25", "https://pokeapi.co/api/v2/pokemon/25"],
 		])("should resolve %s against the PokeAPI base URL", (value, expected) => {
+			// Arrange
+
+			// Act
 			const url = createPokeApiUrl(value)
 
+			// Assert
 			expect(url).toBeInstanceOf(URL)
 			expect(url.href).toBe(expected)
 		})
 
 		it("should preserve an allowed absolute URL", () => {
+			// Arrange
 			const value = "https://pokeapi.co/api/v2/pokemon/25/"
 
-			expect(createPokeApiUrl(value).href).toBe(value)
+			// Act
+			const url = createPokeApiUrl(value)
+
+			// Assert
+			expect(url.href).toBe(value)
 		})
 
 		it.each([undefined, null, 25, {}, [], "", "   "])(
 			"should reject an empty or non-string value: %j",
 			(value) => {
+				// Arrange
+
+				// Act
 				const createUrl = () => createPokeApiUrl(value)
 
+				// Assert
 				expect(createUrl).toThrow(TypeError)
 				expect(createUrl).toThrow("PokeAPI URL must be a non-empty string")
 			},
@@ -80,10 +111,13 @@ describe("PokeAPI URL utilities", () => {
 			"../pokemon/1",
 			"%2e%2e/pokemon/1",
 		])("should reject an invalid or disallowed URL: %s", (value) => {
+			// Arrange
+
+			// Act
 			const createUrl = () => createPokeApiUrl(value)
 
+			// Assert
 			expect(createUrl).toThrow(TypeError)
-
 			expect(createUrl).toThrow("PokeAPI URL is not allowed")
 		})
 	})

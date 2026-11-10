@@ -98,6 +98,8 @@ describe("GET /pokemons/:id ", () => {
 	it.each(["xyz", "1.2", "-1"])(
 		"should return 400 for malformed pokemon id %s without calling PokeAPI",
 		async (id) => {
+			//Arrange
+
 			// Act
 			const response = await request(app).get(`/pokemons/${id}`)
 

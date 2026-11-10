@@ -1,4 +1,4 @@
-import { paginationSchema } from "../../../backend/src/schemas/pagination.schema"
+import { paginationSchema } from "../../../backend/src/schemas/pagination.schema.js"
 import { paramsSchema } from "../../../backend/src/schemas/params.schema.js"
 import {
 	pokeApiPokemonCardResponseSchema,
@@ -8,6 +8,8 @@ import {
 	pokemonResultSchema,
 	pokemonSpeciesResponseSchema,
 } from "../../../backend/src/schemas/pokemon.schema.js"
+import { pokemonSearchQuerySchema } from "../../../backend/src/schemas/search.schema.js"
+
 import makePokemon from "../../factories/pokemon.factory.js"
 import makePokemonCard from "../../factories/pokemon-card.factory.js"
 import makePokemonDetails from "../../factories/pokemon-details.factory.js"
@@ -59,6 +61,8 @@ describe("paramsSchema", () => {
 	})
 
 	it.each(["abc", "1.5", "-1", "", " 1 "])("should reject an invalid id format: %j", (id) => {
+		// Arrange
+
 		// Act
 		const result = paramsSchema.safeParse(id)
 
@@ -69,6 +73,8 @@ describe("paramsSchema", () => {
 	it.each(["0", "501"])(
 		"should parse an integer id without validating the service range: %s",
 		(id) => {
+			// Arrange
+
 			// Act
 			const result = paramsSchema.safeParse(id)
 
@@ -192,6 +198,8 @@ describe("paginationSchema", () => {
 		["offset", "1.5", ["offset"]],
 		["offset", "abc", ["offset"]],
 	])("should reject an invalid %s value: %s", (field, value, expectedPath) => {
+		//Arrange
+
 		//Act
 		const result = paginationSchema.safeParse({ [field]: value })
 
@@ -226,6 +234,8 @@ describe("pokemonResultSchema", () => {
 		],
 		["an empty result list", { count: 1302, results: [] }],
 	])("should accept %s", (_, response) => {
+		// Arrange
+
 		// Act
 		const result = pokemonResultSchema.safeParse(response)
 
@@ -250,6 +260,8 @@ describe("pokemonResultSchema", () => {
 		["a non-integer", 1.5],
 		["a string", "1302"],
 	])("should reject count when it is %s", (_, count) => {
+		//Arrange
+
 		//Act
 		const result = pokemonResultSchema.safeParse({ count, results: [] })
 
@@ -446,6 +458,8 @@ describe("pokemonSpeciesResponseSchema", () => {
 			["flavor_text_entries", 0, "language", "name"],
 		],
 	])("should reject a species response with %s", (_, species, expectedPath) => {
+		// Arrange
+
 		// Act
 		const result = pokemonSpeciesResponseSchema.safeParse(species)
 
@@ -470,5 +484,75 @@ describe("pokeApiPokemonCardResponseSchema specific behavior", () => {
 			types: pokemon.types,
 			sprites: pokemon.sprites,
 		})
+	})
+})
+
+describe("pokemonSearchQuerySchema", () => {
+	it("should normalize the search query and apply pagination defaults", () => {
+		// Arrange
+		const query = { q: "  SAUR  " }
+
+		// Act
+		const result = pokemonSearchQuerySchema.safeParse(query)
+
+		// Assert
+		expect(result.success).toBe(true)
+		expect(result.data).toStrictEqual({ q: "SAUR", limit: 50, offset: 0 })
+	})
+
+	it("should parse valid pagination parameters", () => {
+		// Arrange
+		const query = { q: "pikachu", limit: "10", offset: "20" }
+
+		// Act
+		const result = pokemonSearchQuerySchema.safeParse(query)
+
+		// Assert
+		expect(result.success).toBe(true)
+		expect(result.data).toStrictEqual({ q: "pikachu", limit: 10, offset: 20 })
+	})
+
+	it.each([undefined, "", "   ", 25, ["pikachu"]])(
+		"should reject a missing or invalid query: %j",
+		(q) => {
+			// Arrange
+			const query = q === undefined ? {} : { q }
+
+			// Act
+			const result = pokemonSearchQuerySchema.safeParse(query)
+
+			// Assert
+			expect(result.success).toBe(false)
+		},
+	)
+
+	it("should reject a query longer than 100 characters", () => {
+		// Arrange
+		const query = { q: "a".repeat(101) }
+
+		// Act
+		const result = pokemonSearchQuerySchema.safeParse(query)
+
+		// Assert
+		expect(result.success).toBe(false)
+	})
+
+	it.each([
+		{ limit: "0" },
+		{ limit: "-1" },
+		{ limit: "1.5" },
+		{ limit: "abc" },
+		{ offset: "-1" },
+		{ offset: "1.5" },
+		{ offset: "abc" },
+	])("should reject invalid pagination parameters: %j", (pagination) => {
+		// Arrange
+		const query = { q: "pikachu", ...pagination }
+
+		// Act
+		const result = pokemonSearchQuerySchema.safeParse(query)
+
+		// Assert
+		expect(result.success).toBe(false)
 	})
 })

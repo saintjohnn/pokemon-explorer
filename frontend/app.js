@@ -2,12 +2,14 @@ import path from "node:path"
 import express from "express"
 import { engine } from "express-handlebars"
 import helmet from "helmet"
+import { env } from "./config/env.js"
 import pokemonRouter from "./routes/pokemon.routes.js"
 import { rootDir } from "./utils/path.js"
 
 const app = express()
 
 app.disable("x-powered-by")
+app.set("trust proxy", env.trustProxyHops)
 
 app.use(
 	helmet({
@@ -34,6 +36,8 @@ app.set("view engine", "handlebars")
 app.set("views", path.join(rootDir, "views"))
 
 app.use(express.static(path.join(rootDir, "public")))
+
+app.get("/health", (_, res) => res.status(200).json({ status: "ok" }))
 
 app.use("/", pokemonRouter)
 

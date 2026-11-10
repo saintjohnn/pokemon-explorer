@@ -1,12 +1,9 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 node_modules
-*.txt
-ab.js
-batch.js
-t.js
-then.js
 .env
 .env.*
 !.env.example
-i.js
+
+# Vercel local project metadata
+.vercel

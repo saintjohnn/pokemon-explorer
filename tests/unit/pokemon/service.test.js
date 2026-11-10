@@ -25,6 +25,7 @@ describe("PokemonService", () => {
 
 	describe("getPokemons", () => {
 		it("should return the count and mapped pokemon cards for the requested page", async () => {
+			// Arrange
 			const bulbasaur = makePokemon()
 			const ivysaur = makePokemon({
 				id: 2,
@@ -43,8 +44,10 @@ describe("PokemonService", () => {
 				.mockResolvedValueOnce(bulbasaur)
 				.mockResolvedValueOnce(ivysaur)
 
+			// Act
 			const result = await pokemonService.getPokemons()
 
+			// Assert
 			expect(result).toStrictEqual({
 				count: 1302,
 				results: [
@@ -63,6 +66,7 @@ describe("PokemonService", () => {
 		})
 
 		it("should request the supplied limit and offset", async () => {
+			// Arrange
 			pokeApi
 				.mockResolvedValueOnce({
 					count: 1302,
@@ -70,11 +74,13 @@ describe("PokemonService", () => {
 				})
 				.mockResolvedValueOnce(makePokemon())
 
+			// Act
 			const result = await pokemonService.getPokemons({
 				limit: 50,
 				offset: 50,
 			})
 
+			// Assert
 			expect(result).toStrictEqual({
 				count: 1302,
 				results: [makePokemonCard()],
@@ -83,20 +89,26 @@ describe("PokemonService", () => {
 		})
 
 		it("should propagate an error from the list request", async () => {
+			// Arrange
 			const apiError = new Error("List request failed")
 			pokeApi.mockRejectedValueOnce(apiError)
 
+			// Act
 			const promise = pokemonService.getPokemons()
 
+			// Assert
 			await expect(promise).rejects.toBe(apiError)
 			expect(pokeApi).toHaveBeenCalledExactlyOnceWith(defaultListEndpoint)
 		})
 
 		it("should reject an invalid list response and preserve the Zod error", async () => {
+			// Arrange
 			pokeApi.mockResolvedValueOnce({ results: "invalid" })
 
+			// Act
 			const error = await pokemonService.getPokemons().catch((error) => error)
 
+			// Assert
 			expect(error).toBeInstanceOf(ValidationError)
 			expect(error.cause.name).toBe("ZodError")
 			expect(error.cause.issues).toBeInstanceOf(Array)
@@ -104,20 +116,27 @@ describe("PokemonService", () => {
 		})
 
 		it("should reject a list response with an invalid count", async () => {
+			// Arrange
 			pokeApi.mockResolvedValueOnce({ count: 0, results: [] })
 
+			// Act
 			await expect(pokemonService.getPokemons()).rejects.toBeInstanceOf(ValidationError)
+
+			// Assert
 			expect(pokeApi).toHaveBeenCalledExactlyOnceWith(defaultListEndpoint)
 		})
 
 		it("should propagate an error from an individual pokemon request", async () => {
+			// Arrange
 			const apiError = new Error("Pokemon request failed")
 			pokeApi
 				.mockResolvedValueOnce({ count: 1, results: [{ url: pokemonUrl }] })
 				.mockRejectedValueOnce(apiError)
 
+			// Act
 			const promise = pokemonService.getPokemons()
 
+			// Assert
 			await expect(promise).rejects.toBe(apiError)
 			expect(pokeApi).toHaveBeenNthCalledWith(1, defaultListEndpoint)
 			expect(pokeApi).toHaveBeenNthCalledWith(2, pokemonUrl)
@@ -125,15 +144,20 @@ describe("PokemonService", () => {
 		})
 
 		it("should reject an invalid individual pokemon response", async () => {
+			// Arrange
 			pokeApi
 				.mockResolvedValueOnce({ count: 1, results: [{ url: pokemonUrl }] })
 				.mockResolvedValueOnce({ id: "invalid" })
 
+			// Act
 			await expect(pokemonService.getPokemons()).rejects.toBeInstanceOf(ValidationError)
+
+			// Assert
 			expect(pokeApi).toHaveBeenCalledTimes(2)
 		})
 
 		it("should fetch pokemon cards in batches of at most 20 requests", async () => {
+			// Arrange
 			const results = Array.from({ length: 21 }, (_, index) => ({
 				url: `https://pokeapi.co/api/v2/pokemon/${index + 1}/`,
 			}))
@@ -160,8 +184,10 @@ describe("PokemonService", () => {
 				})
 			})
 
+			// Act
 			const result = await pokemonService.getPokemons({ limit: 21 })
 
+			// Assert
 			expect(result.results).toHaveLength(21)
 			expect(result.count).toBe(21)
 			expect(maximumActiveRequests).toBe(20)
@@ -169,22 +195,27 @@ describe("PokemonService", () => {
 		})
 
 		it("should use the service defaults when called without arguments", async () => {
+			// Arrange
 			pokeApi.mockResolvedValueOnce({ count: 1, results: [] })
 
+			// Act
 			await pokemonService.getPokemons()
 
+			// Assert
 			expect(pokeApi).toHaveBeenCalledExactlyOnceWith(defaultListEndpoint)
 		})
 
 		it("should use a default offset when only a limit is supplied", async () => {
+			// Arrange
 			pokeApi.mockResolvedValueOnce({ count: 1, results: [] })
 
+			// Act
 			await pokemonService.getPokemons({ limit: 50 })
 
+			// Assert
 			expect(pokeApi).toHaveBeenCalledExactlyOnceWith("pokemon?limit=50&offset=0")
 		})
 	})
-
 	describe("getPokemonById", () => {
 		it("should return mapped pokemon details", async () => {
 			// Arrange
@@ -207,6 +238,8 @@ describe("PokemonService", () => {
 		it.each([-1, 0, 1.5, Number.NaN, '"1"'])(
 			"should reject %s as an invalid Pokemon id",
 			async (id) => {
+				// Arrange
+
 				// Act
 				const promise = pokemonService.getPokemonById(id)
 

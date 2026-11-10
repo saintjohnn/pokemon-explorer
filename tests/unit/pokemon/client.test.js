@@ -148,14 +148,14 @@ describe("pokeApi", () => {
 		["a network error", new TypeError("fetch failed")],
 		["a timeout error", new DOMException("The request timed out", "TimeoutError")],
 	])("should propagate %s from fetch unchanged", async (_, error) => {
-		//Arrange
+		// Arrange
 		vi.spyOn(globalThis, "fetch").mockRejectedValue(error)
 
-		//act
+		// Act
 		const promise = pokeApi("pokemon/1")
 
-		//Assert
-		expect(promise).rejects.toBe(error)
+		// Assert
+		await expect(promise).rejects.toBe(error)
 	})
 
 	it("should share the same request for concurrent calls", async () => {

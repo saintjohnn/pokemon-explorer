@@ -2,7 +2,7 @@ import request from "supertest"
 import app from "../../../backend/app.js"
 import { clearPokemonCache, setPokemonCache } from "../../../backend/src/cache/pokemon.cache.js"
 import pokeApi from "../../../backend/src/clients/pokeapi.client.js"
-import { env } from "../../../config/env.js"
+import { env } from "../../../backend/config/env.js"
 import makePokemon from "../../factories/pokemon.factory.js"
 import makePokemonCard from "../../factories/pokemon-card.factory.js"
 
@@ -31,6 +31,7 @@ afterEach(() => {
 
 describe("GET /pokemons - SWR integration", () => {
 	it("should return stale paginated data immediately and refresh the same page through HTTP", async () => {
+		//Arrange
 		setPokemonCache(page1CacheKey, stalePage, Date.now() - env.cacheFreshTtlMs - 1)
 
 		let resolveDetails
@@ -46,17 +47,21 @@ describe("GET /pokemons - SWR integration", () => {
 			return detailsPromise
 		})
 
+		//Act
 		const response = await request(app).get("/pokemons")
 
+		//Assert
 		expect(response.statusCode).toBe(200)
 		expect(response.body).toStrictEqual(stalePage)
 		expect(pokeApi).toHaveBeenCalledTimes(2)
 		expect(pokeApi).toHaveBeenNthCalledWith(1, "pokemon?limit=50&offset=0")
 
+		//Act
 		resolveDetails(pokemon)
 	})
 
 	it("should keep the stale HTTP response successful when background refresh fails", async () => {
+		//Arrange
 		setPokemonCache(page1CacheKey, stalePage, Date.now() - env.cacheFreshTtlMs - 1)
 
 		const refreshError = new Error("PokeAPI unavailable")
@@ -74,15 +79,19 @@ describe("GET /pokemons - SWR integration", () => {
 
 		const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
 
+		//Act
 		const response = await request(app).get("/pokemons")
 
+		//Assert
 		expect(response.statusCode).toBe(200)
 		expect(response.body).toStrictEqual(stalePage)
 		expect(pokeApi).toHaveBeenCalledTimes(2)
 
+		//Act
 		rejectDetails(refreshError)
 
 		await vi.waitFor(() => {
+			//Assert
 			expect(consoleErrorSpy).toHaveBeenCalledWith("background cache refresh failed", refreshError)
 		})
 	})

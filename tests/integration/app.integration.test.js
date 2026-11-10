@@ -2,7 +2,20 @@ import request from "supertest"
 import app from "../../backend/app.js"
 
 describe("application HTTP behavior", () => {
+	it("should expose a health check endpoint", async () => {
+		// Arrange
+
+		// Act
+		const response = await request(app).get("/health")
+
+		// Assert
+		expect(response.statusCode).toBe(200)
+		expect(response.body).toStrictEqual({ status: "ok" })
+	})
+
 	it("should return a JSON 404 response for an unknown route", async () => {
+		//Arrange
+
 		// Act
 		const response = await request(app).get("/unknown-route")
 
@@ -14,6 +27,8 @@ describe("application HTTP behavior", () => {
 	})
 
 	it("should not expose the Express x-powered-by header", async () => {
+		//Arrange
+
 		// Act
 		const response = await request(app).get("/unknown-route")
 
@@ -22,6 +37,8 @@ describe("application HTTP behavior", () => {
 	})
 
 	it("should return 400 without exposing parser details for invalid JSON", async () => {
+		//Arrange
+
 		// Act
 		const response = await request(app)
 			.post("/pokemons")
@@ -36,6 +53,7 @@ describe("application HTTP behavior", () => {
 	})
 
 	it("should reject a top-level JSON primitive when strict mode is enabled", async () => {
+		//Arrange
 		// Act
 		const response = await request(app)
 			.post("/pokemons")
@@ -67,6 +85,8 @@ describe("application HTTP behavior", () => {
 	})
 
 	it("should reject an unsupported JSON charset", async () => {
+		//Arrange
+
 		// Act
 		const response = await request(app)
 			.post("/pokemons")
@@ -81,6 +101,8 @@ describe("application HTTP behavior", () => {
 	})
 
 	it("should reject an unsupported content encoding", async () => {
+		//Arrange
+
 		// Act
 		const response = await request(app)
 			.post("/pokemons")

@@ -1,10 +1,18 @@
 const cache = new Map()
+const maxCacheEntries = 500
 
 export function getPokemonCache(key) {
 	return cache.get(key)
 }
 
 export function setPokemonCache(key, value, now = Date.now()) {
+	if (cache.has(key)) {
+		cache.delete(key)
+	} else if (cache.size >= maxCacheEntries) {
+		const oldestKey = cache.keys().next().value
+		cache.delete(oldestKey)
+	}
+
 	const entry = { value, createdAt: now }
 
 	cache.set(key, entry)

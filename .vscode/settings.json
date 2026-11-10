@@ -1,0 +1,6 @@
+{
+	"json.schemaDownload.enable": true,
+	"json.schemaDownload.trustedDomains": {
+		"https://openapi.vercel.sh": true
+	}
+}

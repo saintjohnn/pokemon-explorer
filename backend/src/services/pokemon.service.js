@@ -1,4 +1,4 @@
-import { env } from "../../../config/env.js"
+import { env } from "../../config/env.js"
 import { deletePokemonCache, getPokemonCache, setPokemonCache } from "../cache/pokemon.cache.js"
 import pokemonListCache from "../cache/pokemon-list.cache.js"
 import pokeApi from "../clients/pokeapi.client.js"
@@ -28,20 +28,14 @@ export default class PokemonService {
 		const cachedState = this.#getCacheState(cachedEntry, cacheKey)
 
 		if (cachedState === "fresh") {
-			console.log("cache HIT")
-
 			return cachedEntry.value
 		}
 
 		if (cachedState === "stale") {
-			console.log("cache HIT and refresh in background")
-
 			this.#refreshPokemonsInBackground(cacheKey, limit, offset)
 
 			return cachedEntry.value
 		}
-
-		console.log("cache MISS: expired or absent")
 
 		return singleFlight(cacheKey, () => this.#fetchAndCachePokemons(cacheKey, limit, offset))
 	}
@@ -128,13 +122,9 @@ export default class PokemonService {
 	}
 
 	async #fetchAndCachePokemons(cacheKey, limit, offset) {
-		console.log("PERFORMING FULL OPERATION")
-
 		const cachedEntry = getPokemonCache(cacheKey)
 
 		if (this.#getCacheState(cachedEntry, cacheKey) === "fresh") {
-			console.log("cache HIT after single-flight")
-
 			return cachedEntry.value
 		}
 

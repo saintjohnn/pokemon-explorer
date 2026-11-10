@@ -16,6 +16,8 @@ app.use(
 
 app.use(express.json({ limit: "10kb", strict: true }))
 
+app.get("/health", (_, res) => res.status(200).json({ status: "ok" }))
+
 app.use("/pokemons", pokemonRouter)
 
 app.use((_, res) => {

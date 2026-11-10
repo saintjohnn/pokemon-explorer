@@ -1,4 +1,5 @@
 import { Router } from "express"
+import { env } from "../config/env.js"
 import { createApiLimiter } from "../middleware/rate-limit.js"
 import {
 	createPaginationView,
@@ -9,7 +10,8 @@ import {
 
 const router = Router()
 
-const backendUrl = "http://localhost:3000"
+const backendUrl = env.backendUrl
+const backendRequestTimeoutMs = 10_000
 
 const apiLimiter = createApiLimiter()
 
@@ -21,7 +23,9 @@ async function fetchPokemonPage(page) {
 		offset: String(offset),
 	})
 
-	const response = await fetch(`${backendUrl}/pokemons?${searchParamns}`)
+	const response = await fetch(`${backendUrl}/pokemons?${searchParamns}`, {
+		signal: AbortSignal.timeout(backendRequestTimeoutMs),
+	})
 
 	if (!response.ok) {
 		throw new Error(`Backend responded with status ${response.status}`)
@@ -75,7 +79,9 @@ router.get("/api/pokemons", apiLimiter, async (req, res, next) => {
 			offset: String(offset),
 		})
 
-		const response = await fetch(`${backendUrl}/pokemons?${searchParams}`)
+		const response = await fetch(`${backendUrl}/pokemons?${searchParams}`, {
+			signal: AbortSignal.timeout(backendRequestTimeoutMs),
+		})
 		const body = await response.json()
 
 		return res.status(response.status).json(body)
@@ -101,7 +107,9 @@ router.get("/api/pokemons/search", apiLimiter, async (req, res, next) => {
 			limit: String(Number.isInteger(limit) && limit > 0 ? limit : POKEMONS_PER_PAGE),
 			offset: String(Number.isInteger(offset) && offset >= 0 ? offset : 0),
 		})
-		const response = await fetch(`${backendUrl}/pokemons/search?${searchParams}`)
+		const response = await fetch(`${backendUrl}/pokemons/search?${searchParams}`, {
+			signal: AbortSignal.timeout(backendRequestTimeoutMs),
+		})
 		const body = await response.json()
 
 		return res.status(response.status).json(body)
@@ -114,7 +122,9 @@ router.get("/pokemons/:id", async (req, res, next) => {
 	try {
 		const { id } = req.params
 
-		const response = await fetch(`${backendUrl}/pokemons/${encodeURIComponent(id)}`)
+		const response = await fetch(`${backendUrl}/pokemons/${encodeURIComponent(id)}`, {
+			signal: AbortSignal.timeout(backendRequestTimeoutMs),
+		})
 
 		if (response.status === 404 || response.status === 400) {
 			return res.status(404).render("not-found", {

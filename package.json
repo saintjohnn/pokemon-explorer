@@ -1,7 +1,7 @@
 {
 	"name": "pokemon-app",
 	"version": "1.0.0",
-	"description": "Pokédex web application built with Node.js and Express, featuring Pokémon search, pagination, cache, and automated tests.",
+	"description": "Pok\u00e9dex web application built with Node.js and Express, featuring Pok\u00e9mon search, pagination, cache, and automated tests.",
 	"license": "MIT",
 	"private": true,
 	"type": "module",
@@ -19,19 +19,21 @@
 		"vitest": "^4.1.10"
 	},
 	"scripts": {
-		"dev:backend": "node --watch --env-file=.env backend/server.js",
-		"dev:frontend": "node --watch --env-file=.env frontend/server.js",
+		"dev:backend": "node --watch --env-file=.env backend/local-server.js",
+		"dev:frontend": "node --watch --env-file=.env frontend/local-server.js",
 		"dev": "concurrently -k -n BACKEND,FRONTEND \"npm:dev:backend\" \"npm:dev:frontend\"",
 		"test": "vitest",
 		"test:unit": "vitest run tests/unit",
 		"test:integration": "vitest run tests/integration",
 		"test:e2e": "vitest run tests/e2e",
 		"test:all": "vitest run",
-		"prepare": "husky",
+		"prepare": "node scripts/prepare.js",
 		"check": "biome check .",
 		"check:fix": "biome check --write .",
 		"format": "biome format --write .",
-		"lint": "biome lint ."
+		"lint": "biome lint .",
+		"start:backend": "node --env-file-if-exists=.env backend/local-server.js",
+		"start:frontend": "node --env-file-if-exists=.env frontend/local-server.js"
 	},
 	"dependencies": {
 		"express": "^5.2.1",

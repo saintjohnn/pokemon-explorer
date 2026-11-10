@@ -1,7 +1,7 @@
 import { clearPokemonCache, setPokemonCache } from "../../../backend/src/cache/pokemon.cache.js"
 import pokeApi from "../../../backend/src/clients/pokeapi.client.js"
 import PokemonService from "../../../backend/src/services/pokemon.service.js"
-import { env } from "../../../config/env.js"
+import { env } from "../../../backend/config/env.js"
 import makePokemon from "../../factories/pokemon.factory.js"
 import makePokemonCard from "../../factories/pokemon-card.factory.js"
 
