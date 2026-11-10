@@ -32,27 +32,16 @@ The repository is organized as two independently deployable Express applications
 ## Technology stack
 
 | Area | Technologies |
-
 |---|---|
-
 | Runtime | Node.js 24.x |
-
 | HTTP applications | Express 5 |
-
 | Server-rendered views | Express Handlebars |
-
 | External data | PokéAPI |
-
 | Validation | Zod |
-
 | Caching | `Map`, `node-cache` |
-
 | Rate limiting | `express-rate-limit` |
-
 | Security headers | Helmet |
-
 | Tests | Vitest, Supertest |
-
 | Code quality | Biome |
 
 ## Features
@@ -218,23 +207,14 @@ Copy-Item .env.example .env
 The root `.env` is used by the root development scripts to start both servers.
 
 | Variable | Local value / default | Purpose |
-
 |---|---:|---|
-
 | `NODE_ENV` | `development` | Local environment mode. |
-
 | `PORT` | `3000` | Backend local port. |
-
 | `FRONTEND_PORT` | `4000` | Frontend local port. |
-
-| `BACKEND_URL` | `http\://127.0.0.1:3000` | Backend base URL used by the frontend server. |
-
+| `BACKEND_URL` | `http://127.0.0.1:3000` | Backend base URL used by the frontend server. |
 | `TRUST_PROXY_HOPS` | `0` | Number of trusted proxy hops used by Express on the frontend. |
-
 | `POKEMON_LIST_CACHE_KEY` | `pokemons:all` | Prefix used when building catalogue-page cache keys. |
-
 | `CACHE_FRESH_TTL_MS` | `60000` | Fresh cache window in milliseconds. |
-
 | `CACHE_STALE_TTL_MS` | `300000` | Maximum age of a catalogue cache entry before it is expired. Must be greater than the fresh TTL. |
 
 `PORT` and `FRONTEND_PORT` are for local `listen()` processes. Vercel invokes the exported Express application as a Function, so these port variables are not needed for deployment.
@@ -252,23 +232,16 @@ Configure variables in each project's **Settings → Environment Variables**. Ad
 #### Backend project
 
 | Variable | Suggested production value |
-
 |---|---|
-
 | `POKEMON_LIST_CACHE_KEY` | `pokemons:all` |
-
 | `CACHE_FRESH_TTL_MS` | `60000` |
-
 | `CACHE_STALE_TTL_MS` | `300000` |
 
 #### Frontend project
 
 | Variable | Suggested production value |
-
 |---|---|
-
-| `BACKEND_URL` | The deployed backend base URL, for example `https\://your-backend.vercel.app` |
-
+| `BACKEND_URL` | The deployed backend base URL, for example `https://your-backend.vercel.app` |
 | `TRUST_PROXY_HOPS` | Start with `1`, then verify client IP and rate-limit behavior in the deployed environment. |
 
 Do not include a trailing slash in `BACKEND_URL`; the environment parser also removes trailing slashes. Do not set `BACKEND_URL` to the frontend URL.
@@ -291,11 +264,11 @@ npm run dev
 
 The two servers start concurrently:
 
-- Frontend: `http\://localhost:4000`
+- Frontend: `http://localhost:4000`
 
-- Backend health check: `http\://localhost:3000/health`
+- Backend health check: `http://localhost:3000/health`
 
-- Frontend health check: `http\://localhost:4000/health`
+- Frontend health check: `http://localhost:4000/health`
 
 The frontend uses `BACKEND_URL` to communicate with the backend. Make sure both servers are running and the URL points to the backend. The frontend `vercel.json` explicitly includes `views/**` in the Express Function bundle because Handlebars loads those templates at runtime. Static assets remain under `frontend/public/`, where Vercel serves them through its CDN.
 
@@ -379,7 +352,7 @@ The frontend and backend are separate Vercel projects. Deploy the backend first 
 
 4. Add the backend environment variables listed above.
 
-5. Deploy a Preview deployment and test `https\://\<backend-preview>/health` and `https\://\<backend-preview>/pokemons?limit=1&offset=0`.
+5. Deploy a Preview deployment and test `https://\<backend-preview>/health` and `https://\<backend-preview>/pokemons?limit=1&offset=0`.
 
 6. Create a second Vercel project from the same repository:
 
@@ -493,12 +466,12 @@ Static assets are served by Vercel from the `public/` directory at the frontend 
 
 ## Further documentation
 
-- [Architecture](*docs/architecture.md*)
+- [Architecture](docs/architecture.md)
 
-- [Technical decisions](*docs/technical-decisions.md*)
+- [Technical decisions](docs/technical-decisions.md)
 
-- [Diagrams](*docs/diagrams.md*)
+- [Diagrams](docs/diagrams.md)
 
-- [Vercel Express documentation](*https\://vercel.com/docs/frameworks/backend/express*)
+- [Vercel Express documentation](https://vercel.com/docs/frameworks/backend/express)
 
-- [Vercel project configuration](*https\://vercel.com/docs/project-configuration*)
+- [Vercel project configuration](https://vercel.com/docs/project-configuration)
